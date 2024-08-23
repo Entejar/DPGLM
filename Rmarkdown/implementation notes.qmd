@@ -1,0 +1,52 @@
+---
+title: "Implementation Notes"
+format: pdf
+editor: visual
+---
+
+## Issues
+
+-   Under setting $1$ and $2$: $5\%$ and $10\%$ quantiles are a bit low as compared to the data points. Similarly, $90\%$ and $95\%$ quantiles are a bit high as compared to the data points. I think the reason is, $K \sim Normal$ and `mainly` because $G_0 = unif(0, 1)$. Should we use $G_0 \equiv unif(a_0, b_0)$ with $0 < a_0 < b_0 < 1$? eg, $a_0 = max(0, min(y) - \sigma_0)$ and $b_0 = min(1, max(y) + \sigma_0)$? `ToDo`
+
+-   Sure bugs in logprior and loglikelihood functions. `ToDo`
+
+-   Uniform for both kernel $K$ and centering dist $G_0$. For this, should we take $G_0 \equiv unif(c, 1-c)$ for $K(y \mid z) \equiv unif(z-c, z+c)$ in order to ensure $y \in [0, 1]$? Also, $z_i \in [y_i - c, y_i + c]$. `ToDo`
+
+-   Choice of $\beta$ prior? using $N(\mu_\beta, \Sigma_\beta)$ with hyperparameter estimates coming from spglm (also, we can get that from classical glm), how about diffuse priors eg $N(0, 1000*I_p)$? `ToDo`
+
+-   Problem in *thetaStart* `Fix` set to NULL. `Done`
+
+### Major Problems
+
+-   No $\tilde z$ in between 0.2 - 0.5, which is giving absurd quantile jump for lower ages (\< 50 months). is this due to: only 9% $y$ is less than 0.5, so do we need to be more restrictive in that region on constructing our priors? very small $\hat \sigma_i$ in $K(y_i \mid z_i, \hat \sigma_i)$? or, better to put prior on $\sigma_i$? how about normal for $K$ with small $\hat \sigma_i$? it would automatically restrict $z \in [0, 1]$. `Fixed` using $\hat \sigma_i = \hat \sigma = 0.001$ (best if used 0.0005, median(se($\hat\mu$)) is 0.005, with min(se($\hat \mu$)) is 0.002)
+
+-   `NA` in probability vector: in z_sampler function. This is is happening when $\tilde J_\ell$ is very small, then problem of numerical stability! `Fixed` using prob $\leftarrow$ log(prob) then prob $\leftarrow$ exp(prob - max(prob))
+
+## Keep an eye on
+
+-   $y$ versus $\hat y$ (why fit is generally bad below 0.5?) Ans: $y$ observations less than 0.5 are sparse (only 9%)
+
+## Notes
+
+-   current implementation time 1 sec per MCMC iteration
+-   `iSpline` overfits, `ns` is better
+
+## Results (`.rds` files)
+
+-   *..without_monotonicity0150pm*: `ns`, $M=15$, $\alpha = 10$, $K \ \& \ G_0 = 1$, $\hat \sigma_i = 0.01$ (setting $1$)
+
+-   *..without_monotonicity0232pm*: `ns`, $M=20$, $\alpha = 10$, $K = 1$, $G_0 = 6 = unif(0,1)$, $\hat \sigma_i = 0.05$ (setting $2$)
+
+-   *0627RDS3.rds*: `ns`, $M=20$, $\alpha = 1$, $K(\cdot \mid z) = unif(z - c_0, z + c_0)$ with $c_0 = 0.025$, $G_0 = 6 = unif(0,1)$ (setting $3$) 
+
+- -   *0628RDS4.rds*: `ns`, $M=20$, $\alpha = 1$, $K(\cdot \mid z) = unif(z - c_0, z + c_0)$ with $c_0 = min(0.025, \delta_1, delta_2)$, also  and $\delta_1 = z - min(y), \delta_2 = max(y) - z$, $G_0 = 6 = unif(0,1)$ (setting $4$)
+
+Q: Setting $3$ or $4$ results to report in paper for SMI data?
+
+# Uniform Kernel K
+
+Quantile for $K(\cdot \mid z) = unif(z - c, z + c)$:
+
+![MCMC diagnostics](diagnosticsRDS3.pdf)
+
+![Quantiles and Uncertainties](Plots/plots/quantilesRDS3.pdf)
