@@ -11,64 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// b_theta
-double b_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i);
-RcppExport SEXP _DPGLM_b_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP theta_iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type s_k(s_kSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type f_k(f_kSEXP);
-    Rcpp::traits::input_parameter< double >::type theta_i(theta_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(b_theta(s_k, f_k, theta_i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// b_prime_theta
-double b_prime_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i);
-RcppExport SEXP _DPGLM_b_prime_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP theta_iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type s_k(s_kSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type f_k(f_kSEXP);
-    Rcpp::traits::input_parameter< double >::type theta_i(theta_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(b_prime_theta(s_k, f_k, theta_i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// L_theta
-double L_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i, double c_0, double y);
-RcppExport SEXP _DPGLM_L_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP theta_iSEXP, SEXP c_0SEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type s_k(s_kSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type f_k(f_kSEXP);
-    Rcpp::traits::input_parameter< double >::type theta_i(theta_iSEXP);
-    Rcpp::traits::input_parameter< double >::type c_0(c_0SEXP);
-    Rcpp::traits::input_parameter< double >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(L_theta(s_k, f_k, theta_i, c_0, y));
-    return rcpp_result_gen;
-END_RCPP
-}
-// llik_beta
-double llik_beta(const arma::vec& y, const arma::mat& x, const arma::vec& theta, const arma::mat& crm, double c_0, int B, double sigma_theta);
-RcppExport SEXP _DPGLM_llik_beta(SEXP ySEXP, SEXP xSEXP, SEXP thetaSEXP, SEXP crmSEXP, SEXP c_0SEXP, SEXP BSEXP, SEXP sigma_thetaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type crm(crmSEXP);
-    Rcpp::traits::input_parameter< double >::type c_0(c_0SEXP);
-    Rcpp::traits::input_parameter< int >::type B(BSEXP);
-    Rcpp::traits::input_parameter< double >::type sigma_theta(sigma_thetaSEXP);
-    rcpp_result_gen = Rcpp::wrap(llik_beta(y, x, theta, crm, c_0, B, sigma_theta));
-    return rcpp_result_gen;
-END_RCPP
-}
 // stick_breaking_init
 arma::vec stick_breaking_init(int K, double alpha);
 RcppExport SEXP _DPGLM_stick_breaking_init(SEXP KSEXP, SEXP alphaSEXP) {
@@ -223,6 +165,84 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// b_theta
+double b_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i);
+RcppExport SEXP _DPGLM_b_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP theta_iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type s_k(s_kSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type f_k(f_kSEXP);
+    Rcpp::traits::input_parameter< double >::type theta_i(theta_iSEXP);
+    rcpp_result_gen = Rcpp::wrap(b_theta(s_k, f_k, theta_i));
+    return rcpp_result_gen;
+END_RCPP
+}
+// b_prime_theta
+double b_prime_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i);
+RcppExport SEXP _DPGLM_b_prime_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP theta_iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type s_k(s_kSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type f_k(f_kSEXP);
+    Rcpp::traits::input_parameter< double >::type theta_i(theta_iSEXP);
+    rcpp_result_gen = Rcpp::wrap(b_prime_theta(s_k, f_k, theta_i));
+    return rcpp_result_gen;
+END_RCPP
+}
+// L_theta
+double L_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i, double c_0, double y);
+RcppExport SEXP _DPGLM_L_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP theta_iSEXP, SEXP c_0SEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type s_k(s_kSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type f_k(f_kSEXP);
+    Rcpp::traits::input_parameter< double >::type theta_i(theta_iSEXP);
+    Rcpp::traits::input_parameter< double >::type c_0(c_0SEXP);
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(L_theta(s_k, f_k, theta_i, c_0, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// llik_beta
+double llik_beta(const arma::vec& y, const arma::mat& x, const arma::vec& theta, const arma::mat& crm, double c_0, int B, double sigma_theta);
+RcppExport SEXP _DPGLM_llik_beta(SEXP ySEXP, SEXP xSEXP, SEXP thetaSEXP, SEXP crmSEXP, SEXP c_0SEXP, SEXP BSEXP, SEXP sigma_thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type crm(crmSEXP);
+    Rcpp::traits::input_parameter< double >::type c_0(c_0SEXP);
+    Rcpp::traits::input_parameter< int >::type B(BSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma_theta(sigma_thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(llik_beta(y, x, theta, crm, c_0, B, sigma_theta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// crm_sampler
+List crm_sampler(const int& M, const arma::vec& u, const arma::vec& zstar, const arma::vec& nstar, const arma::vec& tht, const double& alpha, const arma::vec& mu, const arma::vec& y, arma::vec z_tld, arma::vec J_tld);
+RcppExport SEXP _DPGLM_crm_sampler(SEXP MSEXP, SEXP uSEXP, SEXP zstarSEXP, SEXP nstarSEXP, SEXP thtSEXP, SEXP alphaSEXP, SEXP muSEXP, SEXP ySEXP, SEXP z_tldSEXP, SEXP J_tldSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type zstar(zstarSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type nstar(nstarSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type tht(thtSEXP);
+    Rcpp::traits::input_parameter< const double& >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type z_tld(z_tldSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type J_tld(J_tldSEXP);
+    rcpp_result_gen = Rcpp::wrap(crm_sampler(M, u, zstar, nstar, tht, alpha, mu, y, z_tld, J_tld));
+    return rcpp_result_gen;
+END_RCPP
+}
 // logpdf_unif
 double logpdf_unif(double x, double lower, double upper);
 RcppExport SEXP _DPGLM_logpdf_unif(SEXP xSEXP, SEXP lowerSEXP, SEXP upperSEXP) {
@@ -286,6 +306,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// psi
+double psi(double z, arma::vec u, arma::vec tht);
+RcppExport SEXP _DPGLM_psi(SEXP zSEXP, SEXP uSEXP, SEXP thtSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type z(zSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type tht(thtSEXP);
+    rcpp_result_gen = Rcpp::wrap(psi(z, u, tht));
+    return rcpp_result_gen;
+END_RCPP
+}
+// psi_zstar
+double psi_zstar(double zstar, arma::vec u, arma::vec tht);
+RcppExport SEXP _DPGLM_psi_zstar(SEXP zstarSEXP, SEXP uSEXP, SEXP thtSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type zstar(zstarSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type tht(thtSEXP);
+    rcpp_result_gen = Rcpp::wrap(psi_zstar(zstar, u, tht));
+    return rcpp_result_gen;
+END_RCPP
+}
 // u_sampler
 arma::vec u_sampler(const arma::vec& u_old, const arma::vec& z, const arma::vec& theta, const double& alpha, const double& delta);
 RcppExport SEXP _DPGLM_u_sampler(SEXP u_oldSEXP, SEXP zSEXP, SEXP thetaSEXP, SEXP alphaSEXP, SEXP deltaSEXP) {
@@ -298,17 +344,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double& >::type delta(deltaSEXP);
     rcpp_result_gen = Rcpp::wrap(u_sampler(u_old, z, theta, alpha, delta));
-    return rcpp_result_gen;
-END_RCPP
-}
-// parallelVectorSum
-double parallelVectorSum(NumericVector x);
-RcppExport SEXP _DPGLM_parallelVectorSum(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(parallelVectorSum(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -328,10 +363,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_DPGLM_b_theta", (DL_FUNC) &_DPGLM_b_theta, 3},
-    {"_DPGLM_b_prime_theta", (DL_FUNC) &_DPGLM_b_prime_theta, 3},
-    {"_DPGLM_L_theta", (DL_FUNC) &_DPGLM_L_theta, 5},
-    {"_DPGLM_llik_beta", (DL_FUNC) &_DPGLM_llik_beta, 7},
     {"_DPGLM_stick_breaking_init", (DL_FUNC) &_DPGLM_stick_breaking_init, 2},
     {"_DPGLM_stick_breaking_update", (DL_FUNC) &_DPGLM_stick_breaking_update, 3},
     {"_DPGLM_sample_cluster_assignments", (DL_FUNC) &_DPGLM_sample_cluster_assignments, 4},
@@ -342,13 +373,19 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DPGLM_slice_sampler_a_sigma", (DL_FUNC) &_DPGLM_slice_sampler_a_sigma, 7},
     {"_DPGLM_update_b_sigma", (DL_FUNC) &_DPGLM_update_b_sigma, 4},
     {"_DPGLM_dirichlet_process_mixture_sampler", (DL_FUNC) &_DPGLM_dirichlet_process_mixture_sampler, 14},
+    {"_DPGLM_b_theta", (DL_FUNC) &_DPGLM_b_theta, 3},
+    {"_DPGLM_b_prime_theta", (DL_FUNC) &_DPGLM_b_prime_theta, 3},
+    {"_DPGLM_L_theta", (DL_FUNC) &_DPGLM_L_theta, 5},
+    {"_DPGLM_llik_beta", (DL_FUNC) &_DPGLM_llik_beta, 7},
+    {"_DPGLM_crm_sampler", (DL_FUNC) &_DPGLM_crm_sampler, 10},
     {"_DPGLM_logpdf_unif", (DL_FUNC) &_DPGLM_logpdf_unif, 3},
     {"_DPGLM_rmvnorm", (DL_FUNC) &_DPGLM_rmvnorm, 2},
     {"_DPGLM_rcategorical", (DL_FUNC) &_DPGLM_rcategorical, 1},
     {"_DPGLM_mvrnormArma", (DL_FUNC) &_DPGLM_mvrnormArma, 3},
     {"_DPGLM_log_posterior_u", (DL_FUNC) &_DPGLM_log_posterior_u, 4},
+    {"_DPGLM_psi", (DL_FUNC) &_DPGLM_psi, 3},
+    {"_DPGLM_psi_zstar", (DL_FUNC) &_DPGLM_psi_zstar, 3},
     {"_DPGLM_u_sampler", (DL_FUNC) &_DPGLM_u_sampler, 5},
-    {"_DPGLM_parallelVectorSum", (DL_FUNC) &_DPGLM_parallelVectorSum, 1},
     {"_DPGLM_z_sampler", (DL_FUNC) &_DPGLM_z_sampler, 4},
     {NULL, NULL, 0}
 };

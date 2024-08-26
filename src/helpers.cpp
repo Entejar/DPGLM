@@ -17,4 +17,16 @@ double log_posterior_u(const arma::vec& u, const arma::vec& z, const arma::vec& 
   return - neg_log_post;
 }
 
+// ------------------------------- For CRM update ------------------------------ //
+//[[Rcpp::export]]
+double psi(double z, arma::vec u, arma::vec tht) {
+  double mx = arma::max(tht * z);
+  return arma::accu(u % arma::exp(tht * z - mx));
+}
+
+//[[Rcpp::export]]
+double psi_zstar(double zstar, arma::vec u, arma::vec tht) {
+  return arma::accu(u % arma::exp(tht * zstar));
+}
+
 
