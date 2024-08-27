@@ -61,8 +61,16 @@ crm_sampler <- function(M, u, zstar, nstar, tht, alpha, mu, y, z_tld, J_tld) {
     .Call(`_DPGLM_crm_sampler`, M, u, zstar, nstar, tht, alpha, mu, y, z_tld, J_tld)
 }
 
+expit <- function(x) {
+    .Call(`_DPGLM_expit`, x)
+}
+
 logpdf_unif <- function(x, lower, upper) {
     .Call(`_DPGLM_logpdf_unif`, x, lower, upper)
+}
+
+logpdf_mvnorm <- function(x, mean, sigma) {
+    .Call(`_DPGLM_logpdf_mvnorm`, x, mean, sigma)
 }
 
 rmvnorm <- function(mean, Precision) {

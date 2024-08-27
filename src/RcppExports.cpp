@@ -243,6 +243,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// expit
+arma::vec expit(const arma::vec& x);
+RcppExport SEXP _DPGLM_expit(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(expit(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // logpdf_unif
 double logpdf_unif(double x, double lower, double upper);
 RcppExport SEXP _DPGLM_logpdf_unif(SEXP xSEXP, SEXP lowerSEXP, SEXP upperSEXP) {
@@ -253,6 +264,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type lower(lowerSEXP);
     Rcpp::traits::input_parameter< double >::type upper(upperSEXP);
     rcpp_result_gen = Rcpp::wrap(logpdf_unif(x, lower, upper));
+    return rcpp_result_gen;
+END_RCPP
+}
+// logpdf_mvnorm
+double logpdf_mvnorm(const arma::vec& x, const arma::vec& mean, const arma::mat& sigma);
+RcppExport SEXP _DPGLM_logpdf_mvnorm(SEXP xSEXP, SEXP meanSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(logpdf_mvnorm(x, mean, sigma));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -378,7 +402,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DPGLM_L_theta", (DL_FUNC) &_DPGLM_L_theta, 5},
     {"_DPGLM_llik_beta", (DL_FUNC) &_DPGLM_llik_beta, 7},
     {"_DPGLM_crm_sampler", (DL_FUNC) &_DPGLM_crm_sampler, 10},
+    {"_DPGLM_expit", (DL_FUNC) &_DPGLM_expit, 1},
     {"_DPGLM_logpdf_unif", (DL_FUNC) &_DPGLM_logpdf_unif, 3},
+    {"_DPGLM_logpdf_mvnorm", (DL_FUNC) &_DPGLM_logpdf_mvnorm, 3},
     {"_DPGLM_rmvnorm", (DL_FUNC) &_DPGLM_rmvnorm, 2},
     {"_DPGLM_rcategorical", (DL_FUNC) &_DPGLM_rcategorical, 1},
     {"_DPGLM_mvrnormArma", (DL_FUNC) &_DPGLM_mvrnormArma, 3},

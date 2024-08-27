@@ -7,16 +7,16 @@
 // [[Rcpp::export]]
 double b_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i) {
   arma::vec exp_term = arma::exp(theta_i * s_k);
-  double sum = arma::dot(f_k, exp_term);
-  return std::log(sum);
+  double sum = arma::accu(f_k % exp_term);
+  return log(sum); // log(sum(f_k * exp(theta_i * s_k)))
 }
 
 // Function to compute b'(theta_i)
 // [[Rcpp::export]]
 double b_prime_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i) {
   arma::vec exp_term = arma::exp(theta_i * s_k);
-  double numerator = arma::dot(s_k % f_k, exp_term);
-  double denominator = arma::dot(f_k, exp_term);
+  double numerator = arma::accu(s_k % f_k % exp_term); // sum(s_k * f_k * exp(theta_i * s_k))
+  double denominator = arma::accu(f_k % exp_term); // sum(f_k * exp(theta_i * s_k))
   return numerator / denominator;
 }
 
@@ -25,8 +25,8 @@ double b_prime_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i)
 double L_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i,
                double c_0, double y) {
   arma::vec exp_term = arma::exp(theta_i * s_k); // exp(theta_i * s_k)
-  double sum = arma::dot(f_k, exp_term); // sum(f_k * exp(theta_i * s_k))
-  arma::vec p_z = exp_term * f_k / sum; // p(z = s_k) = exp(theta_i * s_k) / sum(f_k * exp(theta_i * s_k))
+  double sum = arma::accu(f_k % exp_term); // sum(f_k * exp(theta_i * s_k)
+  arma::vec p_z = f_k % exp_term / sum; // p(z = s_k) = f_k * exp(theta_i * s_k) / sum(f_k * exp(theta_i * s_k))
   arma::uvec indices = arma::find(s_k - c_0 < y && y < s_k + c_0); // indices of s_k such that s_k - c_0 < y < s_k + c_0
   return arma::sum(p_z(indices)) / (2 * c_0); // sum_{s_k} (K(y | z = s_k) * p(z = s_k | theta_i,..))
 }
@@ -43,7 +43,7 @@ double llik_beta(const arma::vec& y, const arma::mat& x, const arma::vec& theta,
       double t_theta_i = theta(i) + R::rnorm(0, sigma_theta);
       L_theta_i += L_theta(crm.row(0).t(), crm.row(1).t(), t_theta_i, c_0, y(i));
     }
-    llik += std::log(L_theta_i / B);
+    llik += log(L_theta_i / B);
   }
   return llik;
 }

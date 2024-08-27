@@ -13,6 +13,11 @@ double expit(double x) {
   return 1.0 / (1.0 + exp(-x));
 }
 
+//[[Rcpp::export]]
+arma::vec expit(const arma::vec& x) {
+  return 1.0 / (1.0 + exp(-x));
+}
+
 double cdf_normal(double x, double mean, double sd) {
   return 0.5 * (1.0 + erf((x - mean) / (sd * sqrt(2.0))));
 }
@@ -35,6 +40,13 @@ double logpdf_gamma(double x, double shape, double scale) {
 
 double logpdf_normal(double x, double mean, double sd){
   return -0.5 * log(2.0 * M_PI) - log(sd) - 0.5 * pow((x - mean) / sd, 2.0); // M_PI is \pi = 3.14..
+}
+
+//[[Rcpp::export]]
+double logpdf_mvnorm(const arma::vec& x, const arma::vec& mean, const arma::mat& sigma) {
+  return -0.5 * (x.size() * log(2.0 * M_PI) + 
+                 log(det(sigma)) + 
+                 as_scalar((x - mean).t() * inv_sympd(sigma) * (x - mean))); 
 }
 
 
