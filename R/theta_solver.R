@@ -1,10 +1,18 @@
-theta_solver <- function(z.tld, J.tld, mu, thtst){
-  out <- gldrm:::getTheta(spt = z.tld, f0 = J.tld, mu = mu, sampprobs = NULL,
-                          ySptIndex = NULL, thetaStart = thtst)
-  tht <- out$theta
-  bpr2 <- out$bPrime2
-  btht <- apply(exp(outer(tht, z.tld, "*")), 1, function(row) log(sum(row * J.tld)))
-  return(list(bpr2 = bpr2, tht = tht, btht = btht))
+theta_solver <- function(locations, jumps, meanY_x, thetastart) {
+  out <- gldrm:::getTheta(
+    spt = locations,
+    f0  = jumps,
+    mu  = meanY_x,
+    sampprobs  = NULL,
+    ySptIndex  = NULL,
+    thetaStart = thetastart)
+  theta   <- out$theta
+  bprime2 <- out$bPrime2
+  btheta  <- b_theta(locations, jumps, theta)
+  
+  return(list(bpr2 = bprime2, 
+              theta = theta, 
+              btht = btheta))
 }
 
 

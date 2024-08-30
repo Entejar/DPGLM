@@ -1,10 +1,21 @@
-theta_sampler <- function(X, beta, sigmaTheta, z, link, z.tld, J.tld){
-  n <- nrow(X)
-  mu <- link_fn(X %*% beta, link)$mu
-  tht.tld <- theta_solver(z.tld, J.tld, # / sum(J.tld),
-                          mu, NULL)$tht
-  sigma2Theta <- (sigmaTheta)^2
-  muTheta <- tht.tld + (z * sigma2Theta)
-  tht <- rnorm(n, mean = muTheta, sd = sigmaTheta)
-  return(tht)
+## NOTE: theta_tilde = free parameters, theta = derived parameters
+
+theta_tilde_sampler <- function(meanY_x,
+                                sigma_theta,
+                                z,
+                                locations,
+                                jumps) {
+  theta <-  gldrm:::getTheta(
+    spt = locations,
+    f0  = jumps,
+    mu  = meanY_x,
+    sampprobs  = NULL,
+    ySptIndex  = NULL,
+    thetaStart = thetastart
+  )$theta
+  
+  theta_tilde <- as.vector(mvrnormArma(1, theta + z * sigma_theta^2, 
+                                       diag(length(z)) * sigma_theta^2))
+  
+  return(theta_tilde)
 }

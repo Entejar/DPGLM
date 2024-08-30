@@ -61,14 +61,15 @@ dpglm <- function(y, X, link, iter, tuning.params){
     zMX <- max(z.tld)
     beta <- beta_sampler(y, X, z.tld, J.tld, zMN, zMX, beta, Sig, mubetaprior, Sigbetaprior, link, c0,
                          sigmaTheta[1])
-    mu <- link_fn(X %*% beta, link)$mu
-    # theta update ------------------------------------
-    tht <- theta_sampler(X, beta, sigmaTheta, z, link, z.tld, J.tld)
+    meanY_x <- as.numeric(expit(X %*% beta))
+    
+    # theta_tilde update ------------------------------------
+    theta_tilde <- theta_tilde_sampler(meanY_x, sigma_theta, z, locations, jumps)
 
     # u update ----------------------------------------
     u <- u_sampler(u, tht, z, n, alpha, G0.dist, mu0G, sigma0G, delta, a00, b00)
 
-    # crm update --------------------------------------
+    # CRM update --------------------------------------
     crm <- crm_sampler(M, u, zstar, nstar, tht, n, alpha, G0.dist, a00, b00, mu, z.tld, J.tld)
     z.tld <- crm$z.tld
     J.tld <- crm$J.tld

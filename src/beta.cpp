@@ -4,11 +4,21 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 
 // Function to compute b(theta_i)
-// [[Rcpp::export]]
 double b_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i) {
   arma::vec exp_term = arma::exp(theta_i * s_k);
   double sum = arma::accu(f_k % exp_term);
   return log(sum); // log(sum(f_k * exp(theta_i * s_k)))
+}
+
+// Function to compute b(theta)
+// [[Rcpp::export]]
+arma::vec b_theta(const arma::vec& s_k, const arma::vec& f_k, 
+                  const arma::vec& theta) {
+  arma::vec b_theta_vec(theta.size());
+  for(int i = 0; i < theta.size(); ++i) {
+    b_theta_vec(i) = b_theta(s_k, f_k, theta(i));
+  }
+  return b_theta_vec;
 }
 
 // Function to compute b'(theta_i)
