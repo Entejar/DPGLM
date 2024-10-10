@@ -1,0 +1,135 @@
+\documentclass{article}[12pt]
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{textcomp}
+\usepackage[a4paper, margin=1 in]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{bm}
+\usepackage{xcolor}
+\definecolor{LightGray}{gray}{0.9}
+\usepackage{float}
+\usepackage{mathrsfs}
+\usepackage{natbib}
+\usepackage{longtable}
+\bibliographystyle{plainnat}
+\usepackage{theorem}
+\newcounter{theorem}
+\renewcommand\thetheorem{\arbic{theorem}}
+\newtheorem{theorem}{Theorem}%[theorem]
+%\newtheorem{algorithm}{Algorithm}%[theorem]
+\newtheorem{corollary}{Corollary}%[section]%[theorem]
+\newtheorem{fact}{Fact}%[section]
+\newtheorem{property}{Property}%[section]
+\newtheorem{result}{Result}%[section]
+\newtheorem{lemma}{Lemma}%[section]
+%\newtheorem{proof}{Proof}
+%%%
+\newtheorem{assumption}{Assumption}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newcommand{\estimates}{\overset{\scriptscriptstyle\wedge}{=}}
+\newcommand{\limd}{\lim_{\delta \rightarrow 0}}
+\newcommand{\limn}{\lim_{n \rightarrow \infty}}
+\newcommand{\limns}{\limsup_{n \rightarrow \infty}}
+\newcommand{\limni}{\liminf_{n \rightarrow \infty}}
+\newcommand{\ddelt}{\frac{d}{dt}}
+\newcommand{\intrp}{\int_0^\infty}
+\newcommand{\intr}{\int_{-\infty}^\infty}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\II}{\mathbb{I}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\sumni}{\sum_{i = 1}^n}
+\newcommand{\sumNi}{\sum_{i = 1}^N}
+\newcommand{\summr}{\sum_{r = 1}^m}
+\newcommand{\summj}{\sum_{j = 1}^m}
+\newcommand{\sumnj}{\sum_{j = 1}^n}
+\newcommand{\dto}{\stackrel{D}{\rightarrow}}
+\newcommand{\Pto}{\stackrel{P}{\rightarrow}}
+\newcommand{\asto}{\stackrel{a.s.}{\rightarrow}}
+\newcommand{\dd}{\stackrel{\text{d}}{=}}
+\newcommand{\del}{\partial}
+\newcommand{\eps}{\varepsilon}
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\SA}{\mathscr{A}}
+\newcommand{\CA}{\mathcal{A}}
+\newcommand{\CF}{\mathcal{F}}
+\newcommand{\iid}{\stackrel{\mathrm{iid}}{\sim}}
+\newcommand{\ind}{\stackrel{\mathrm{ind}}{\sim}}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+
+
+%%%% citations style
+\newcommand{\customcite}[1]{\citeauthor{#1}, \href{cite.#1}{\textcolor{blue}{\citeyear{#1}}}}
+
+\newcommand{\customcitetwo}[1]{\citeauthor{#1} (\href{cite.#1}{\textcolor{blue}{\citeyear{#1}}})}
+
+\newcommand{\customcitet}[2]{(\href{cite.#1}{\citeauthor{#1}}, \href{cite.#1}{\textcolor{blue} {\citeyear{#1}}}; \href{cite.#2}{\citeauthor{#2}}, \href{cite.#2}{\textcolor{blue} {\citeyear{#2}}})}
+
+\newcommand{\todo}[1]{\textcolor{red}{[To Do: \textcolor{teal}{#1}]}}
+\newcommand{\customref}[1]{\textcolor{blue}{\ref{#1}}}
+
+\newcommand{\Ga}{\mbox{Ga}}
+\renewcommand{\th}{\theta}
+\newcommand{\cb}{\bm{c}}
+\renewcommand{\sb}{\bm{s}}
+\newcommand{\vb}{\bm{v}}
+\newcommand{\wb}{\bm{w}}
+\newcommand{\bx}{\mbox{\boldmath $x$}}
+\newcommand{\beps}{\mbox{\boldmath $\epsilon$}}
+\newcommand{\estimates}{\mathrel{\widehat{=}}}
+\newcommand{\tmu}{\widetilde{\mu}}
+\newcommand{\scf}{\mathcal{F}}
+\newcommand{\sx}{\mathcal{X}}
+\newcommand{\sy}{\mathcal{Y}}
+\newcommand{\bth}{\mbox{\boldmath $\theta$}}
+
+\renewcommand{\baselinestretch}{1.8}
+
+\title{DP--SPGLM Notes}
+\author{Entejar}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+(Model): $p(y_i \mid x_i = x) \sim p_x \propto \exp(\th_x y_i)\tmu(y_i)$ with $y_i \in \mathcal{Y}$ and $x \in \mathcal{X}$. 
+\vspace{1mm}
+\newline (Prior): $\tmu \sim$ CRM (completely random measure) e.g., gamma CRM (normalized version of this is DP). CRM is characterized by Levy intensity $\nu(s, y) = \rho(s \mid y) H(y), s \in \mathcal{R}^+, y \in \mathcal{Y}$ and is almost surely discrete in nature:
+$$
+\widetilde{\mu}(\cdot)=\sum_{h=1}^{\infty} \omega_h \delta_{m_h}(\cdot)
+$$
+This implies a prior on $\scf = \{p_x: x \in \sx\}$. With gamma CRM on $\tmu$, this becomes the Dependent Dirichlet Process (DDP) prior.
+\vspace{1mm}
+
+\noindent Note that $\exists$ lot of literature on DDP priors, with typical ``common weight DDP'':
+\begin{equation}
+p_x(\cdot) = \sum_{h=1}^\infty \omega_{h} \delta_{m_h(x)}(\cdot) \label{varyingweightsDDP}
+\end{equation}
+The selling points of our model and prior are:
+
+-- dependence is on weights $\omega_h(x)$ with common atoms, which is not very common in literature.
+
+-- inhomogeneous CRM on $p_x$ [this is cute, but you might not care].
+
+\section{Posterior simulation}
+(James et al): likelihood, $y_i \sim p \propto \tmu$ with prior on $\tmu \sim$ CRM. Then, they did posterior simulation by introducing a latent variable $u \in \mathcal{R}^+$. Posterior $\tmu \mid u, \mathbf{y} \sim$ again a CRM with updated parameters. 
+\vspace{2mm}
+\newline (Our setup): likelihood $p_x(y_i) \propto \exp(\th_x y_i)\tmu(y_i)$ and CRM prior on $\tmu$. We think we can show and do posterior simulation by introducing a $n$ latent variables $\mathbf{u} = (u_1, \dots, u_n) \in {\mathcal{R}^+}^n$. Then, posterior $\tmu \mid \mathbf{u}, \bth, \mathbf{y} \sim$ CRM again.
+\vspace{2mm}
+\newline (Notes):
+
+-- The above is true only for fixed $\th_i$.
+
+-- Maybe we can add one more layer to the hierarchical structure: $\theta_i \sim N(\phi_i, c)$ with very small $c$ and $\phi_i = \phi(\beta, \tmu, x_i)$. In this case, we can do Gibbs update: $\beta \to \bth \to \mathbf{u} \to \tmu \to \beta \to \dots$
+
+-- Easy to generalise to DPM.
+
+\end{document}
+

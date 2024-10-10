@@ -1,0 +1,155 @@
+\begin{thebibliography}{22}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Argiento et~al.(2010)Argiento, Guglielmi, and
+  Pievatolo]{Argiento:2010}
+Raffaele Argiento, Alessandra Guglielmi, and Antonio Pievatolo.
+\newblock {B}ayesian density estimation and model selection using nonparametric
+  hierarchical mixtures.
+\newblock \emph{Computational Statistics \& Data Analysis}, 54\penalty0
+  (4):\penalty0 816--832, 2010.
+
+\bibitem[Barrios et~al.(2013)Barrios, Nieto-Barajas, and
+  Pr{\"u}nster]{barrios&al:13}
+E.~Barrios, L.~E. Nieto-Barajas, and I.~Pr{\"u}nster.
+\newblock A study of normalized random measures mixture models.
+\newblock \emph{Statistical Science}, page to appear, 2013.
+
+\bibitem[De~Blasi et~al.(2013)De~Blasi, Favaro, Lijoi, Mena, Pr{\"u}nster, and
+  Ruggiero]{de2013gibbs}
+Pierpaolo De~Blasi, Stefano Favaro, Antonio Lijoi, Rams{\'e}s~H Mena, Igor
+  Pr{\"u}nster, and Matteo Ruggiero.
+\newblock Are gibbs-type priors the most natural generalization of the
+  dirichlet process?
+\newblock \emph{IEEE transactions on pattern analysis and machine
+  intelligence}, 37\penalty0 (2):\penalty0 212--229, 2013.
+
+\bibitem[Favaro and Teh(2013)]{favaro&teh:13}
+S.~Favaro and Y.~W. Teh.
+\newblock {MCMC} for normalized random measure mixture models.
+\newblock \emph{Statistical Science}, page to appear, 2013.
+
+\bibitem[Ferguson(1973)]{ferguson1973bayesian}
+Thomas~S Ferguson.
+\newblock {A {B}ayesian analysis of some nonparametric problems}.
+\newblock \emph{The Annals of Statistics}, pages 209--230, 1973.
+
+\bibitem[Ferguson and Klass(1972)]{ferguson1972representation}
+Thomas~S Ferguson and Michael~J Klass.
+\newblock {A representation of independent increment processes without Gaussian
+  components}.
+\newblock \emph{The Annals of Mathematical Statistics}, 43\penalty0
+  (5):\penalty0 1634--1643, 1972.
+
+\bibitem[Huang(2014)]{huang2014joint}
+Alan Huang.
+\newblock {Joint estimation of the mean and error distribution in generalized
+  linear models}.
+\newblock \emph{Journal of the American Statistical Association}, 109\penalty0
+  (505):\penalty0 186--196, 2014.
+
+\bibitem[Hustad et~al.(2021)Hustad, Mahr, Natzke, and Rathouz]{hustad:2021}
+Katherine~C Hustad, Tristan~J Mahr, Phoebe Natzke, and Paul~J Rathouz.
+\newblock Speech development between 30 and 119 months in typical children i:
+  Intelligibility growth curves for single-word and multiword productions.
+\newblock \emph{Journal of Speech, Language, and Hearing Research}, 64\penalty0
+  (10):\penalty0 3707--3719, 2021.
+
+\bibitem[James et~al.(2009)James, Lijoi, and Pr{\"u}nster]{james2009posterior}
+Lancelot~F James, Antonio Lijoi, and Igor Pr{\"u}nster.
+\newblock {Posterior analysis for normalized random measures with independent
+  increments}.
+\newblock \emph{Scandinavian Journal of Statistics}, 36\penalty0 (1):\penalty0
+  76--97, 2009.
+
+\bibitem[Kingman(1967)]{kingman1967completely}
+John Kingman.
+\newblock {Completely random measures}.
+\newblock \emph{Pacific Journal of Mathematics}, 21\penalty0 (1):\penalty0
+  59--78, 1967.
+
+\bibitem[Kossin et~al.(2020)Kossin, Knapp, Olander, and
+  Velden]{kossin2020global}
+James~P Kossin, Kenneth~R Knapp, Timothy~L Olander, and Christopher~S Velden.
+\newblock {Global increase in major tropical cyclone exceedance probability
+  over the past four decades}.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 117\penalty0
+  (22):\penalty0 11975--11980, 2020.
+
+\bibitem[Lijoi et~al.(2007)Lijoi, Mena, and
+  Pr{\"u}nster]{lijoi&mena&pruenster:07}
+Antonio Lijoi, Ramses~H. Mena, and Igor Pr{\"u}nster.
+\newblock Controlling the reinforcement in {B}ayesian non-parametric mixture
+  models.
+\newblock \emph{Journal of the Royal Statistical Society: Series B (Statistical
+  Methodology)}, 69\penalty0 (4):\penalty0 715--740, 2007.
+
+\bibitem[MacEachern(2000)]{maceachern;2000}
+S~N MacEachern.
+\newblock {Dependent {D}irichlet processes}.
+\newblock Technical report, Department of Statistics, The Ohio State
+  University, 2000.
+
+\bibitem[Mahr et~al.(2020)Mahr, Rathouz, and Hustad]{mahr:2020}
+Tristan~J Mahr, Paul~J Rathouz, and Katherine~C Hustad.
+\newblock Longitudinal growth in intelligibility of connected speech from 2 to
+  8 years in children with cerebral palsy: A novel bayesian approach.
+\newblock \emph{Journal of Speech, Language, and Hearing Research}, 63\penalty0
+  (9):\penalty0 2880--2893, 2020.
+
+\bibitem[Maronge et~al.(2023)Maronge, Tao, Schildcrout, and
+  Rathouz]{maronge2023generalized}
+Jacob~M Maronge, Ran Tao, Jonathan~S Schildcrout, and Paul~J Rathouz.
+\newblock {Generalized case-control sampling under generalized linear models}.
+\newblock \emph{Biometrics}, 79\penalty0 (1):\penalty0 332--343, 2023.
+
+\bibitem[Nieto-Barajas et~al.(2004)Nieto-Barajas, Pr{\"u}nster, and
+  Walker]{nieto2004normalized}
+Luis~E Nieto-Barajas, Igor Pr{\"u}nster, and Stephen~G Walker.
+\newblock Normalized random measures driven by increasing additive processes.
+\newblock \emph{Annals of Statistics}, 32:\penalty0 2343--2360, 2004.
+
+\bibitem[Paul et~al.(2021)Paul, Adeyemi, Ghosh, Pokhrel, and
+  Arif]{paul2021dynamics}
+Rajib Paul, Oluwaseun Adeyemi, Subhanwita Ghosh, Kamana Pokhrel, and Ahmed~A
+  Arif.
+\newblock {Dynamics of Covid-19 mortality and social determinants of health: a
+  spatiotemporal analysis of exceedance probabilities}.
+\newblock \emph{Annals of Epidemiology}, 62:\penalty0 51--58, 2021.
+
+\bibitem[Quintana et~al.(2022)Quintana, M{\"u}ller, Jara, and
+  MacEachern]{quintana2022dependent}
+Fernando~A Quintana, Peter M{\"u}ller, Alejandro Jara, and Steven~N MacEachern.
+\newblock {The dependent {D}irichlet process and related models}.
+\newblock \emph{Statistical Science}, 37\penalty0 (1):\penalty0 24--41, 2022.
+
+\bibitem[Rathouz and Gao(2009)]{rathouz2009generalized}
+Paul~J Rathouz and Liping Gao.
+\newblock {Generalized linear models with unspecified reference distribution}.
+\newblock \emph{Biostatistics}, 10\penalty0 (2):\penalty0 205--218, 2009.
+
+\bibitem[Regazzini et~al.(2003)Regazzini, Lijoi, and
+  Pr{\"u}nster]{regazzini2003distributional}
+Eugenio Regazzini, Antonio Lijoi, and Igor Pr{\"u}nster.
+\newblock {Distributional results for means of normalized random measures with
+  independent increments}.
+\newblock \emph{The Annals of Statistics}, 31\penalty0 (2):\penalty0 560--585,
+  2003.
+
+\bibitem[Sethuraman(1994)]{sethuraman1994constructive}
+Jayaram Sethuraman.
+\newblock {A constructive definition of Dirichlet priors}.
+\newblock \emph{Statistica sinica}, pages 639--650, 1994.
+
+\bibitem[Taylor and Yu(2016)]{taylor2016using}
+James~W Taylor and Keming Yu.
+\newblock {Using auto-regressive logit models to forecast the exceedance
+  probability for financial risk management}.
+\newblock \emph{Journal of the Royal Statistical Society Series A: Statistics
+  in Society}, 179\penalty0 (4):\penalty0 1069--1092, 2016.
+
+\end{thebibliography}

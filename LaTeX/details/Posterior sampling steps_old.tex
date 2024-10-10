@@ -1,0 +1,118 @@
+\documentclass[10pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{ulem}
+\usepackage{cancel}
+%SetFonts
+
+%SetFonts
+\newcommand{\Q}[1]{\textcolor{brown}{[Q: \textcolor{teal}{#1}]}}
+\newcommand{\citea}[1]{\citeauthor{#1}, \href{cite.#1}{\textcolor{blue}{\citeyear{#1}}}}
+\newcommand{\citeb}[1]{\citeauthor{#1} (\href{cite.#1}{\textcolor{blue}{\citeyear{#1}}})}
+\newcommand{\citec}[2]{(\href{cite.#1}{\citeauthor{#1}}, \href{cite.#1}{\textcolor{blue} {\citeyear{#1}}}; \href{cite.#2}{\citeauthor{#2}}, \href{cite.#2}{\textcolor{blue} {\citeyear{#2}}})}
+\newcommand{\todo}[1]{\textcolor{red}{[To Do: \textcolor{teal}{#1}]}}
+\newcommand{\refa}[1]{\textcolor{blue}{\ref{#1}}}
+
+
+
+\newcommand{\Ga}{\mbox{Ga}}
+\renewcommand{\th}{\theta}
+\newcommand{\cb}{\bm{c}}
+\renewcommand{\sb}{\bm{s}}
+\newcommand{\vb}{\bm{v}}
+\newcommand{\wb}{\bm{w}}
+\newcommand{\bx}{\mbox{\boldmath $x$}}
+\newcommand{\beps}{\mbox{\boldmath $\epsilon$}}
+\newcommand{\estimates}{\mathrel{\widehat{=}}}
+\newcommand{\thh}{\widetilde{H}}
+\newcommand{\scf}{\mathcal{F}}
+\newcommand{\sx}{\mathcal{X}}
+\newcommand{\sy}{\mathcal{Y}}
+\newcommand{\bth}{\mbox{\boldmath $\theta$}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\renewcommand{\scf}{\mathcal{F}}
+\renewcommand{\sx}{\mathcal{X}}
+\renewcommand{\sy}{\mathcal{Y}}
+\newcommand{\syy}{\mathbb{\sy}}
+\newcommand{\sbb}{\mathcal{B}}
+\newcommand{\sd}{\mathcal{D}}
+\newcommand{\eps}{\epsilon}
+\newcommand{\pr}{\mbox{Pr}}
+\newcommand{\ub}{\mathbf{u}}
+\newcommand{\tn}{{\widetilde n}}
+\newcommand{\tmu}{\widetilde{\mu}}
+
+\usepackage{amsthm} % for theorem environments
+
+% Theorem styles
+\newtheorem{result}{Result}[section] % Numbered within each section
+\newtheorem{theorem}{Theorem}[section] % Numbered within each section
+\newtheorem{lemma}[theorem]{Lemma} % Numbered with theorems
+\newtheorem{corollary}[theorem]{Corollary} % Numbered with theorems
+
+% Proof environment
+\renewenvironment{proof}{\noindent \textit{Proof.}}
+
+\title{DP-GLM and Posterior Sampling Steps}
+%\author{}
+\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+\section{DP-GLM}
+Final hierarchical model ---
+\begin{align*}
+ y_i \mid  z_i, x_i & \sim K(y_i \mid z_i), \quad y_i, z_i \in \sy \\
+z_i \mid x_i = x, \theta_{x}, \tmu & \sim p_x(z_i) \propto
+                                       \exp(\th_{x} z_i) \widetilde
+                                       \mu(z_i) \\ 
+\theta_x \mid \widetilde \theta_x & \sim p(\theta_x \mid \widetilde \theta_x), \text{ with } \int_\sy z \frac{\exp(\widetilde \th_{x} z) \widetilde
+                                       \mu(z)}{\int_\sy \exp(\widetilde \th_{x} u ) \widetilde
+                                       \mu(u) du} dz = g^{-1}(x^\prime \beta)  \\ 
+\tmu & \sim \text{ gamma CRM}(\nu), \text{ with } \nu(ds, dz) = \frac{e^{-s}}{s} ds \cdot \alpha G_0(dz) \\ 
+\beta & \sim \text{ MVN}(\mu_\beta, \Sigma_\beta), 
+\end{align*}
+where $\frac{\widetilde \mu}{\tmu(\sy)}  \sim DP(\alpha, G_0), \ K(\cdot \mid z_i)  = \text{ Uniform}(z_i - c_0, z_i + c_0)$, $p(\theta_x \mid \widetilde \theta_x) = N(\widetilde \theta_x, c^2)$. We choose $c$ to be small positive fraction. Here $\sy = [0, 1]$.
+% where $\frac{\widetilde \mu}{\tmu(\sy)}  \sim DP(\alpha, G_0), \ K(\cdot \mid z_i)  = N(\cdot \mid z_i, \sigma^2_0)$ (or some other distribution), $p(\theta_x \mid \widetilde \theta_x) = N(\widetilde \theta_x, c^2)$ for easy conjugacy. We choose $c$ to be small. 
+\section{Posterior sampling steps}
+Parameters, $(\beta, \widetilde \mu, \theta)$ and latent variables,  $\{z_i\}_{i=1}^n, \{u_i\}_{i=1}^n$. 
+\newline Choices to make for $\alpha, \rho, G_0, K, \sigma_0, \mu_\beta, \Sigma_\beta,$ and $M = $ CRM truncation number. We can also put a prior on $\sigma_0$. \vspace{2mm}
+
+\begin{itemize}
+    \item[I.] $[\widetilde \beta \mid -] \sim N_p(\mu^\star_\beta, \Sigma^\star_\beta) 1_A\left(\widetilde{\beta}\right),$ \newline where $\mu^\star_\beta = \beta^{(t)}, \Sigma^\star_\beta = \rho  \mathcal{I}^{-1}\left(\widehat \beta_{mle} ; \widehat {\widetilde \mu}_{mle}\right)$, where $A = \left\{\beta \in \R^p :  g^{-1}\left(x_i^T \beta \right) \in \sy \right \}$, $\rho \in (0,1]$ is a tuning parameter, and $ \mathcal{I}^{-1}\left(\widehat \beta_{mle} ; \widehat {\widetilde \mu}_{mle}\right)$ is the inverse Fisher information matrix associated with $\beta$ at $(\beta, \tmu) = \left(\widehat \beta_{mle} ; \widehat {\widetilde \mu}_{mle}\right)$.
+    \item[II.] $[\theta_{x_i} \mid -] ~ \text{ Normal}(\widetilde \theta_{x_i} + c^2z_i, c^2)$.
+\item[III.] $[\ub \mid -]:$
+\begin{eqnarray*}
+Pr\left(\ub \mid  \mathbf{z}^{(t)}, \mathbf{\theta}^{(t)} \right) \propto \exp \left \{ - \int_{\sy} \ln \left[1+ \sum_{i=1}^n u_i \exp(\th^{(t)}_i  z) \right] G_n(dz) \right\}, 
+\end{eqnarray*}
+where $G_n(\cdot) = \alpha G_0(\cdot) +  \sum_{j=1}^n \delta_{z^{(t)}_j} (\cdot)$. The second term can also be written as $\sum_{\ell = 1}^{\widetilde n} n_\ell \delta_{z^\star_\ell}(\cdot)$, where $\{z^\star_\ell\}_{\ell=1}^{\widetilde n}$ are the unique values, among $\{z^{(t)}_j, j=1, \dots, n\}$, with $\{n_\ell\}_{\ell=1}^{\widetilde n}$ ties. \vspace{2mm}
+
+\textit{Proposal for} $\ub$ [Idea from Igor's Stat Sci 2013 paper]: We generate proposal using random walk, $u_j \sim Gamma\left(\delta, \delta\big/u^{(t)}_j\right), j = 1, \dots, n$ and followed up with an MH acceptance-rejection step. The hyperparameter $\delta (\geq 1)$ controls the acceptance rate of the M-H step being higher for larger values.
+
+\item[IV.] $[\widetilde \mu \mid \mathbf{u}^{(t+1)}, \mathbf{z}^{(t)}, \mathbf{\theta}^{(t)}]:$
+\begin{itemize}
+ \item[(a)]  ${\widetilde \mu}^{\left({\ub}^{(t+1)}\right)} \sim \text{ CRM}\left(\nu^{(\ub)}\right) \text{ with } \nu^{(\ub)} (ds, dz) = e^{- \left\{\sum_{i=1}^n u^{(t+1)}_i \exp(\th^{(t+1)}_i z) \right\} s} \rho(ds \mid z) G_0(dz) = e^{- \Psi(z) s} \rho(ds \mid z) G_0(dz) = \alpha \frac{e^{- \left(\Psi(z) +1\right) s}}{s} ds G_0(dz)$.  ${\widetilde \mu}^{\left({\ub}^{(t+1)}\right)}(\cdot) = \sum_{\ell =1}^M J^{(t+1)}_\ell \delta_{z^{(t+1)}_\ell}(\cdot)$ (random locations $z_\ell$ and jumps $J_\ell$ are generated using Ferguson and Klass (1972) algorithm; $M$ is used for finite approximation of the CRM). Omitting superscript $u$ for better readability.
+ $$
+ N(v) = \nu([v, \infty], \sy) = \int_v^\infty  \int_{\sy} \nu(ds, dz) = \alpha \int_v^\infty  \int_{\sy} \frac{e^{- \left(\Psi(z) +1\right) s}}{s} ds G_0(dz) 
+ $$
+ 
+ \item[(b)] $\Pr\left(J^{\left({\ub}^{(t+1)}, z^{(t)}_j\right)}_j\right) \propto s e^{-s \left\{\sum_{i=1}^n u^{(t+1)}_i \exp(\th^{(t+1)}_i z^{(t)}_j)\right\}} \rho(ds \mid z^{(t)}_j) =  e^{- \left(\Psi\left(z^{(t)}_j\right) +1\right) s} \sim EXP$ $\left(mean = 1\bigg/\left(\Psi\left(z^{(t)}_j\right) +1\right)\right)$. Let's assume we have $r$ unique fixed locations ($z^\star_1, \dots, z^\star_r$). Then for jumps, we generate from $\Pr(J^\star_\ell \mid -)\propto s^{n_\ell - 1}  e^{- \left(\Psi\left({z^\star_\ell}^{(t)}\right) +1\right) s} \equiv Gamma\left(n_\ell,  \Psi\left({z^\star_\ell}^{(t)}\right) +1\right)$ $, \ell = 1, \dots, r$.
+\end{itemize}
+\item[V.] $[\mathbf{z} \mid {\widetilde \mu}^{(t+1)}, \mathbf{y}]:$ 
+\begin{eqnarray*}
+\Pr[z_i \mid {\widetilde \mu}^{(t+1)}, \mathbf{y}] \propto \sum_{\ell} K(y_i \mid z_i) \exp(\theta_i z_i) {\widetilde{J}}^{(t+1)}_\ell \delta_{{\widetilde z}^{(t+1)}_\ell}(z_i)\ ,
+\end{eqnarray*} 
+where $\widetilde J := \{{\widetilde{J}}^{(t+1)}_\ell \}_{\ell \geq 1} = \{{J^\star_1}^{(t+1)}, \dots,  {J^\star_r}^{(t+1)}, {J_1}^{(t+1)}, \dots, \}$ [first $r$ jumps are from 2(b) and rest from 2(a)]. Similarly, $\widetilde Z := \{{\widetilde z}^{(t+1)}_\ell\}_{\ell \geq 1} = \{{z^\star_1}^{(t+1)}, \dots,  {z^\star_r}^{(t+1)}, {z_1}^{(t+1)}, \dots, \}$. Hence, $z_i \sim a \ categorical \ distribution$. 
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,214 @@
+\documentclass[10pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{ulem}
+\usepackage{cancel}
+%SetFonts
+
+%SetFonts
+\newcommand{\Q}[1]{\textcolor{brown}{[Q: \textcolor{teal}{#1}]}}
+\newcommand{\citea}[1]{\citeauthor{#1}, \href{cite.#1}{\textcolor{blue}{\citeyear{#1}}}}
+\newcommand{\citeb}[1]{\citeauthor{#1} (\href{cite.#1}{\textcolor{blue}{\citeyear{#1}}})}
+\newcommand{\citec}[2]{(\href{cite.#1}{\citeauthor{#1}}, \href{cite.#1}{\textcolor{blue} {\citeyear{#1}}}; \href{cite.#2}{\citeauthor{#2}}, \href{cite.#2}{\textcolor{blue} {\citeyear{#2}}})}
+\newcommand{\todo}[1]{\textcolor{red}{[To Do: \textcolor{teal}{#1}]}}
+\newcommand{\refa}[1]{\textcolor{blue}{\ref{#1}}}
+
+
+
+\newcommand{\Ga}{\mbox{Ga}}
+\renewcommand{\th}{\theta}
+\newcommand{\cb}{\bm{c}}
+\renewcommand{\sb}{\bm{s}}
+\newcommand{\vb}{\bm{v}}
+\newcommand{\wb}{\bm{w}}
+\newcommand{\bx}{\mbox{\boldmath $x$}}
+\newcommand{\beps}{\mbox{\boldmath $\epsilon$}}
+\newcommand{\estimates}{\mathrel{\widehat{=}}}
+\newcommand{\thh}{\widetilde{H}}
+\newcommand{\scf}{\mathcal{F}}
+\newcommand{\sx}{\mathcal{X}}
+\newcommand{\sy}{\mathcal{Y}}
+\newcommand{\bth}{\mbox{\boldmath $\theta$}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\renewcommand{\scf}{\mathcal{F}}
+\renewcommand{\sx}{\mathcal{X}}
+\renewcommand{\sy}{\mathcal{Y}}
+\newcommand{\syy}{\mathbb{\sy}}
+\newcommand{\sbb}{\mathcal{B}}
+\newcommand{\sd}{\mathcal{D}}
+\newcommand{\eps}{\epsilon}
+\newcommand{\pr}{\mbox{Pr}}
+\newcommand{\ub}{\mathbf{u}}
+\newcommand{\tn}{{\widetilde n}}
+
+\usepackage{amsthm} % for theorem environments
+
+% Theorem styles
+\newtheorem{result}{Result}[section] % Numbered within each section
+\newtheorem{theorem}{Theorem}[section] % Numbered within each section
+\newtheorem{lemma}[theorem]{Lemma} % Numbered with theorems
+\newtheorem{corollary}[theorem]{Corollary} % Numbered with theorems
+
+% Proof environment
+\renewenvironment{proof}{\noindent \textit{Proof.}}
+
+\title{DPGLM -- Posterior Sampling}
+%\author{}
+\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+\section{DPGLM}
+Consider a GLM  
+\begin{equation}
+  y \sim p(y \mid x) = p_x(y) \propto \exp (\th_x y)\thh(y) \label{eq1} 
+\end{equation}
+with response $y \in \mathcal{Y} \subset \mathcal{R}$ and a p-dimensional covariate vector $x \in \mathcal{X}$. Here, $T(\th_x)$ is the normalization constant for $p_x$ with
+\begin{eqnarray}
+T(\th_x) = \int_{\mathcal{Y}} \exp (\th_x y) \thh(dy) \ . \label{eq2}  
+ \end{eqnarray}
+Hence $\frac{\thh}{T(0)}$ is the baseline density. Let $b(\theta) = \ln T(\theta)$. In the classical GLM, the baseline distribution is assumed to be in a parametric family---in the proposed semi-parametric model it becomes an unknown parameter.  As in the classical GLM, $\eta = x^T\beta$ is a linear predictor, $g$ is a link function, and $\mu = \E(y \mid x) = g^{-1}(\eta)$. For fixed $\thh,$ the expectation $\mu$ implicitly determines $\th$ by the equation
+\begin{equation}
+\mu = \E(y \mid x) = b^{\prime}(\th_x) = \frac{\int_{\mathcal{Y}} y \exp (\th_x y) \thh(dy)}{\int_{\mathcal{Y}} \exp (\th_x y) \thh(dy)} \ ,\label{eq3}
+\end{equation}
+where we note that $b^{\prime}(\theta)$  is a strictly increasing function of $\theta.$ The free parameters in the model are $\beta$ and $\thh$. By contrast, $\th_x = \theta (\beta, \thh; x)$ is a derived parameter based on (\refa{eq3}). We can write the solution for $\theta$ as a function of $\mu$, denoted as ${b^\prime}^{-1}(\mu; \thh)$, which additionally depends on $\thh$, in addition to depending on $\beta$, implicitly through $\mu = x^T\beta$.
+\vspace{2mm}
+
+We put a multivariate normal prior on $\beta$ and a completely random measure (CRM) on $\thh$ as:
+\begin{eqnarray}
+\thh \sim \mbox{CRM}(\widetilde{\nu}), \mbox{ with L\'evy intensity, } \widetilde \nu (dy, ds) = \rho(ds \mid y) H(dy), \label{eq4}
+\end{eqnarray}
+where $\rho(\cdot \mid y)$ is a measure on $(\R^+, \sbb(\R^+))$ for $y$ in $\sy$ and $H$ is a measure on $(\mathcal{Y}, \sbb(\sy))$.  If $\rho(\cdot \mid y)$ does not depend on $y$ i.e.,  $\rho(\cdot \mid y) = \rho(\cdot)$ for all $y$, then both $\widetilde \nu$ and $\thh$ are termed homogeneous. Otherwise, $\widetilde \nu$ and $\thh$ are termed non-homogeneous. A CRM on $\thh$ implies a prior on $\scf = \{p_x: x \in \sx\}$. In case of gamma CRM on $\thh$, with concentration parameter $\alpha$, the prior on $\scf$ becomes a Dependent Dirichlet Process (DDP) prior. We can express $\thh(\cdot) = \sum_{\ell=1}^{\infty} s_\ell \delta_{y_\ell}(\cdot)$ with L\'evy intensity, $\widetilde{\nu}(dy, ds)=\alpha \frac{e^{-s}}{s} ds H(dy)$.  Therefore $p_x(y)$ can be expressed as follows:
+\begin{eqnarray*}
+p_x(y) & \propto &\exp \left(\th_x y \right) \sum_{\ell=1}^\infty s_\ell \delta_{y_\ell} (y)\\
+& = & 
+\sum_{\ell=1}^\infty \left\{\exp\left(\th_x y\right)  s_\ell\right\} \delta_{y_\ell} (y) \\
+& = & 
+\sum_{\ell=1}^\infty  s_\ell(x; y) \delta_{y_\ell} (y),
+\end{eqnarray*}
+where $s_\ell(x; y) = \exp\left(\th_x y\right)  s_\ell$, depends on $x$ implicitly through $\th_x$. Hence, this Bayesian framework falls nicely into the category of varying weights DDP with the atoms being constant across $x$. 
+%\subsection{}
+
+\section{Posterior Sampling}
+\label{sec2}
+Let $\sd$ denote the observed data $\{x_i, y_i\}_{i=1}^n$. From (\refa{eq2}), we denote $T_i = T_i(\sy) = T(\th_{x_i}) = \int_{\mathcal{Y}} \exp (\th_{x_i} y) \thh(dy)$. For simplicity, we consider no ties in $\{y_i\}^n_{i=1}$; we extend it to the general case later. Consider $n$ disjoint subsets $C_1, \dots, C_n$ of $\sy$, where we take $C_i := \{y \in \sy: d(y, y_i) < \eps\}$, where $d$ is a distance function and $C_{n+1} = \sy \setminus \cup^n_{i=1} C_i$. We next denote $\widetilde T_i = T_i(C_i) =  \int_{C_i} \exp (\th_{x_i} y) \thh(dy)$. The conditional Laplace functional of $\thh$ (note: literally, Laplace functional for posterior $\thh \mid y_1, \dots, y_n$, when we push $\eps \to 0$) is given by,
+\begin{eqnarray*}
+E \left(e^{-\int_\sy h(y) \thh(dy)} \mid y_1 \in C_1, \dots, y_n \in C_n\right) & = & \int e^{-\int_\sy h(y) \thh(dy)} \pr(\thh \mid y_1 \in C_1, \dots, y_n \in C_n) d(\thh)\\
+& = & \int e^{-\int_\sy h(y) \thh(dy)} \frac{\pr(\thh, y_1 \in C_1, \dots, y_n \in C_n)}{\pr(y_1 \in C_1, \dots, y_n \in C_n)} d(\thh)\\
+& = &  \frac{\int e^{-\int_\sy h(y) \thh(dy)} \pr(\thh, y_1 \in C_1, \dots, y_n \in C_n)d(\thh)}{\pr(y_1 \in C_1, \dots, y_n \in C_n)} \\
+& = &  \frac{\int e^{-\int_\sy h(y) \thh(dy)} \pr(\thh, y_1 \in C_1, \dots, y_n \in C_n)d(\thh)}{\int \pr(\thh, y_1 \in C_1, \dots, y_n \in C_n) d(\thh)} \\
+& = &  \frac{\int e^{-\int_\sy h(y) \thh(dy)} \pr(y_1 \in C_1, \dots, y_n \in C_n \mid \thh) \pr(\thh)d(\thh)}{\int \pr(y_1 \in C_1, \dots, y_n \in C_n \mid \thh) \pr(\thh) d(\thh)} \\
+& = &  \frac{\int e^{-\int_\sy h(y) \thh(dy)} \frac{T_i(C_i)}{T_i(\sy)} \pr(\thh) d(\thh)}{\int \prod_{i=1}^n \frac{T_i(C_i)}{T_i(\sy)} \pr(\thh) d(\thh)} \\
+& = &  \frac{E\left( e^{-\int_\sy h(y) \thh(dy)} \prod_{i = 1}^n \frac{\widetilde T_i}{T_i} \right)}{E \left(\prod_{i=1}^n \frac{\widetilde T_i}{T_i} \right)} \\
+& & [\mbox{not a conditional expectation anymore :)}] \\
+\end{eqnarray*}
+\subsection{Numerator calculation}
+We have $\frac{1}{T_i} = \int_{\R^{+}} e^{-T_i u_i} d u_i =  \int_{\R^{+}} e^{- \int_{\mathcal{Y}} \exp (\th_{x_i} y) \thh(dy) u_i} d u_i =  \int_{\R^{+}} e^{- \int_{\mathcal{Y}} u_i \exp (\th_i y) \thh(dy)} d u_i$. Hence, 
+\begin{eqnarray*}
+\prod_{i=1}^n \frac{1}{T_i} & = & \prod_{i=1}^n \int_{\R^{+}} e^{- \int_{\mathcal{Y}} u_i \exp (\th_i y) \thh(dy)} d u_i \\
+& = & \int_{{\R^{+}}^n} e^{- \int_{\mathcal{Y}}  \sum_{i=1}^n u_i \exp (\th_i y) \thh(dy)} d u_1\dots du_n \\
+& =  & \int_{{\R^{+}}^n} \prod_{j=1}^{n+1} e^{- \int_{C_j} \sum_{i=1}^n u_i \exp (\th_i y) \thh(dy)} d u_1\dots du_n
+\end{eqnarray*}
+, with $\sy = \cup_{j=1}^{n+1} C_j$. We have, $e^{-\int_\sy h(y) \thh(dy)} \prod_{i = 1}^n \frac{\widetilde T_i}{T_i}$
+\begin{eqnarray*}
+   & = & \prod_{j=1}^{n+1} e^{-\int_{C_j} h(y) \thh(dy)}  \prod_{i=1}^n {\widetilde T_i} \int_{{\R^{+}}^n} \prod_{j=1}^{n+1} e^{- \int_{C_j} \sum_{i=1}^n u_i \exp (\th_i y) \thh(dy)} d u_1\dots du_n \\
+   & = & \prod_{i=1}^n {\widetilde T_i} \int_{{\R^{+}}^n} \prod_{j=1}^{n+1} e^{- \int_{C_j} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} d u_1\dots du_n \\
+  & = &  \prod_{i=1}^n {\widetilde T_i} \int_{{\R^{+}}^n}  e^{- \int_{C_{n+1}} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} \prod_{j=1}^{n} e^{- \int_{C_j} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} d u_1\dots du_n \\
+  & = & \int_{{\R^{+}}^n}  e^{- \int_{C_{n+1}} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} \prod_{j=1}^{n} \left\{ - \frac{d}{du_j} e^{- \int_{C_j} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} \right\} d u_1\dots du_n \\
+  & & \left[\mbox{Note that : } \frac{d}{du_j} e^{- \int_{C_j} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} = - \widetilde {T_j} e^{- \int_{C_j} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)}\right] \\
+\end{eqnarray*}
+Hence, $\E_{\thh}\left[e^{-\int_\sy h(y) \thh(dy)} \prod_{i = 1}^n \frac{\widetilde T_i}{T_i}\right]$
+\begin{eqnarray*}
+ & \stackrel{Fubini}{=} &  \int_{{\R^{+}}^n}  \E_{\thh}\left[e^{- \int_{C_{n+1}} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} \prod_{j=1}^{n} \left\{ - \frac{d}{du_j} e^{- \int_{C_j} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} \right\} \right] d u_1\dots du_n \\
+ & = & \int_{{\R^{+}}^n}  \E_{\thh}\left[e^{- \int_{C_{n+1}} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} \right] \prod_{j=1}^{n} - \frac{d}{du_j} \E_{\thh}\left[e^{- \int_{C_j} \left(h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right) \thh(dy)} \right] d u_1\dots du_n \\
+  & & \left[\mbox{We choose } \eps \mbox{ very close to } 0 \mbox{ such that } C_j \cap C_{j'} = \phi \stackrel{CRM}{\implies} \thh(C_j) \mbox{ is independent over } j  \right]
+\end{eqnarray*}
+Let us define $\eta(y, \ub)  = \eta(y, u_1, \dots, u_n) := h(y) + \sum_{i=1}^n u_i \exp (\th_i y)$ and $S = \R^{+} \times \sy = \cup_{j=1}^{n+1} S_j$, with $S_j = \R^{+} \times C_j$. From (\refa{eq4}), $\widetilde \nu(ds, dy) = \rho(ds \mid y) H(dy)$.
+Next using L\'evy–Khintchine representation, $\E_{\thh}\left[e^{-\int_\sy h(y) \thh(dy)} \prod_{i = 1}^n \frac{\widetilde T_i}{T_i}\right]$
+\begin{eqnarray*}
+  & = & \int_{{\R^{+}}^n}   \exp \left \{ - \int_{\R^{+} \times C_{n+1}} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\}  \prod_{j=1}^{n} - \frac{d}{du_j}  \exp \left \{ - \int_{\R^{+} \times C_{j}} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\} d u_1\dots du_n \\
+   & = & \int_{{\R^{+}}^n}   \exp \left \{ - \int_{S_{n+1}} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\}  \prod_{j=1}^{n} - \frac{d}{du_j}  \exp \left \{- \int_{S_j} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\} d u_1\dots du_n \\
+   & = & \int_{{\R^{+}}^n}   \exp \left \{ - \int_{S} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\} \cdot  \prod_{j=1}^{n} \left[\left\{- \frac{d}{du_j}  \exp \left( - \int_{S_j} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right) \right\} \cdot \right. \\
+  & & \hspace{7.3cm}  \left.  \exp \left \{ \int_{S_j} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\} \right]  d u_1\dots du_n \\
+ & = & \int_{{\R^{+}}^n}   \exp \left \{ - \int_{S} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\} \cdot  \prod_{j=1}^{n} V^{(1)}_{C_j}(\ub)  \ d u_1\dots du_n 
+\end{eqnarray*}
+, with $V^{(1)}_{C_j}(\ub) = \left\{- \frac{d}{du_j}  \exp \left( - \int_{S_j} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right) \right\} \cdot \exp \left \{ \int_{S_j} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right\}$. We have,
+\begin{eqnarray*}
+   V^{(1)}_{C_j}(\ub) & = & - \frac{d}{du_j}  \left( - \int_{S_j} \left[1 - e^{- s \eta(y, \ub)} \right] \widetilde{\nu}(ds, dy)\right) \\
+   & = & \int_{S_j} e^{- s \eta(y, \ub)} \ s \frac{d}{du_j}  \left\{h(y) + \sum_{i=1}^n u_i \exp (\th_i y) \right\} \widetilde{\nu}(ds, dy) \\
+   & = & \int_{S_j} e^{- s \eta(y, \ub)} \ s \exp (\th_j y) \  \widetilde{\nu}(ds, dy) \\
+    & = & \int_{C_j} \exp (\th_j y)  \left\{\int_{\R^{+}} s e^{- s \eta(y, \ub)} \  \rho(ds \mid y) \right\} H(dy) \\
+   & = & \int_{C_j} \exp (\th_j y)  \phi_{1}(\ub, y) V^{(0)}_{C_j}(\ub) H(dy) =  \int_{C_j}  \exp (\th_j y)  \phi_{1}(\ub, y) H(dy),
+\end{eqnarray*}
+with $V^{(0)}_{C_j}(\ub) = 1$ and $\phi_{1}(\ub, y) = \int_{\R^{+}} s e^{-s\left(h(y) + \sum_{i=1}^n u_i \exp(\th_i y)\right)} \rho(ds \mid y)$. Let us denote $\Delta^{(1)}_{\th_j} (\ub, y) := \exp (\th_j y)  \phi_{1}(\ub, y)$. Note that: we do not need to introduce $V^{(0)}_{C_j}(\ub)$ for our proof. 
+\subsection{Denominator calculation}
+$\E_{\thh}\left[\prod_{i = 1}^n \frac{\widetilde T_i}{T_i}\right] = $ same expression as numerator with $ \eta(y, \ub) =  \sum_{i=1}^n u_i \exp (\th_i y)$ (i.e., $h(y) = 0$).
+\subsection{Final expression}
+$E \left(e^{-\int_\sy h(y) \thh(dy)} \mid y_1 \in C_1, \dots, y_n \in C_n\right)$
+\begin{eqnarray*}
+  & = & \frac{\int_{{\R^{+}}^n}   \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- s\left(h(y) + \sum_{i=1}^n u_i \exp(\th_i y)\right)} \right] \rho(ds \mid y) H(dy) \right\} \cdot  \prod_{j=1}^{n}   \int_{C_j}   \Delta^{(1)}_{\th_j} (\ub, y) H(dy) \ d u_1\dots du_n }{\int_{{\R^{+}}^n}   \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- s \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\}} \right] \rho(ds \mid y) H(dy) \right\} \cdot  \prod_{j=1}^{n}   \int_{C_j}  \Delta^{\star (1)}_{\th_j} (\ub, y) H(dy) \ d u_1\dots du_n} \\
+  & \stackrel{\epsilon \to 0}{=} & \frac{\int_{{\R^{+}}^n}  A \cdot  \prod_{j=1}^{n} \left\{ \int_\sy \exp (\th_j y)   \left[\int_{\R^{+}} s e^{-s\left\{h(y) + \sum_{i=1}^n u_i \exp(\th_i y)\right\}} \rho(ds \mid y)\right] \delta_{y_j}(y) H(dy) \right\} \ d \ub }{\int_{{\R^{+}}^n}  B  \cdot  \prod_{j=1}^{n}  \left\{ \int_\sy \exp (\th_j y)   \left[\int_{\R^{+}} s e^{-s\left\{\sum_{i=1}^n u_i \exp(\th_i y)\right\}} \rho(ds \mid y)\right] \delta_{y_j}(y) H(dy) \right\} \ d \ub} \\
+   & = & \frac{\int_{{\R^{+}}^n}  A \cdot  \prod_{j=1}^{n} \left\{\exp (\th_j y_j)   \left[\int_{\R^{+}} s e^{-s\left\{h(y_j) + \sum_{i=1}^n u_i \exp(\th_i y_j)\right\}} \rho(ds \mid y_j)\right] \right\} \ d \ub }{\int_{{\R^{+}}^n}  B  \cdot  \prod_{j=1}^{n}  \left\{ \exp (\th_j y_j)   \left[\int_{\R^{+}} s e^{-s\left\{\sum_{i=1}^n u_i \exp(\th_i y_j)\right\}} \rho(ds \mid y_j)\right]  \right\} \ d \ub} \\
+    & = & \frac{\int_{{\R^{+}}^n}   A \cdot  \prod_{j=1}^{n}  \int_{\R^{+}} e^{- h(y_j) s} \ s e^{-s \left\{\sum_{i=1}^n u_i \exp(\th_i y_j)\right\}} \rho(ds \mid y_j)  \ d \ub }{\int_{{\R^{+}}^n}   B  \cdot  \prod_{j=1}^{n} \int_{\R^{+}} s e^{-s\left\{\sum_{i=1}^n u_i \exp(\th_i y_j)\right\}} \rho(ds \mid y_j) \ d \ub} \\
+    & = & \frac{\int_{{\R^{+}}^n} A \cdot C  \ d \ub }{\int_{{\R^{+}}^n}   B  \cdot  D \ d \ub} \\
+      & = & \frac{\int_{{\R^{+}}^n}  \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- s\left(h(y) + \sum_{i=1}^n u_i \exp(\th_i y)\right)} \right] \rho(ds \mid y) H(dy) \right\} \cdot C  \ d \ub }{\int_{{\R^{+}}^n}   \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- s \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\}} \right] \rho(ds \mid y) H(dy) \right\}  \cdot  D \ d \ub} \\
+        & = & \frac{\int_{{\R^{+}}^n}  \exp \left \{ - \int_{\R^{+} \times \sy} \left[e^{\left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} - e^{- h(y) s} + 1 - 1 \right] e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s}\rho(ds \mid y) H(dy) \right\} \cdot C  \ d \ub }{\int_{{\R^{+}}^n}   \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- s \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\}} \right] \rho(ds \mid y) H(dy) \right\}  \cdot  D \ d \ub} \\
+       & = & \frac{\int_{{\R^{+}}^n}  \exp \left \{ - \int_{\R^{+} \times \sy} \left(\left[1 - e^{- h(y) s} \right] e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} + \left[1 - e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} \right]\right)\rho(ds \mid y) H(dy) \right\} \cdot C  \ d \ub }{\int_{{\R^{+}}^n}   \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- s \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\}} \right] \rho(ds \mid y) H(dy) \right\}  \cdot  D \ d \ub} \\
+          & = & \frac{\int_{{\R^{+}}^n}  \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- h(y) s} \right] \nu^{(\ub)} (ds, dy) \right\} \cdot  \exp \left \{ - \int_{\R^{+} \times \sy}  \left[1 - e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} \right] \nu(ds, dy) \right\} \cdot C  \ d \ub }{\int_{{\R^{+}}^n}   \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- s \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\}} \right] \rho(ds \mid y) H(dy) \right\}  \cdot  D \ d \ub} \\
+           & = & \frac{\int_{{\R^{+}}^n}  \exp \left \{ - \int_{\R^{+} \times \sy} \left[1 - e^{- h(y) s} \right] \nu^{(\ub)} (ds, dy) \right\} \cdot  e^{-\psi(\ub)} \cdot C  \ d \ub }{\int_{{\R^{+}}^n}   e^{-\psi(\ub)}  \cdot  D \ d \ub} \\
+             & = & \frac{\int_{{\R^{+}}^n} E_{\thh^{(\ub)}}\left[e^{-\int_\sy h(y) \thh^{(\ub)}(dy)}\right] \cdot \prod_{j=1}^n E\left[e^{-h(y_j)} J^{(\ub, y_j)}_j \right] \int_{\R^{+}} s e^{-s \left\{\sum_{i=1}^n u_i \exp(\th_i y_j)\right\}} \rho(ds \mid y_j) \cdot  e^{-\psi(\ub)}  \ d \ub }{\int_{{\R^{+}}^n}   e^{-\psi(\ub)}  \cdot  D \ d \ub} \\
+             & = & \frac{\int_{{\R^{+}}^n} E_{\thh^{(\ub)}}\left[e^{-\int_\sy h(y) \thh^{(\ub)}(dy)}\right] \cdot \prod_{j=1}^n E\left[e^{-h(y_j)} J^{(\ub, y_j)}_j \right] \prod_{j=1}^n \int_{\R^{+}} s e^{-s \left\{\sum_{i=1}^n u_i \exp(\th_i y_j)\right\}} \rho(ds \mid y_j)  \cdot  e^{-\psi(\ub)}  \ d \ub }{\int_{{\R^{+}}^n}   e^{-\psi(\ub)}  \cdot  D \ d \ub} \\
+             & = & \frac{\int_{{\R^{+}}^n} E_{\thh^{(\ub)}}\left[e^{-\int_\sy h(y) \thh^{(\ub)}(dy)}\right] \cdot \prod_{j=1}^n E\left[e^{-h(y_j)} J^{(\ub, y_j)}_j \right] \cdot D  \cdot  e^{-\psi(\ub)}  \ d \ub }{\int_{{\R^{+}}^n}   e^{-\psi(\ub)}  \cdot  D \ d \ub} \\
+                 & = &  \int_{{\R^{+}}^n} E_{\thh^{(\ub)}}\left[e^{-\int_\sy h(y) \thh^{(\ub)}(dy)}\right] \cdot \prod_{j=1}^n E\left[e^{-h(y_j)} J^{(\ub, y_j)}_j \right] \cdot \frac{ D  \cdot  e^{-\psi(\ub)} \ d \ub }{\int_{{\R^{+}}^n}   e^{-\psi(\ub)}  \cdot  D \ d \ub} \\
+\end{eqnarray*}
+where $\Delta^{\star (1)}_{\th_j} (\ub, y) = \exp (\th_j y)   \int_{\R^{+}} s e^{-s\left\{\sum_{i=1}^n u_i \exp(\th_i y)\right\}} \rho(ds \mid y) \ ; \quad \nu^{(\ub)} (ds, dy) = \rho^{(\ub)}(ds \mid y) H(dy) = e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s}\rho(ds \mid y) H(dy)\ ; \quad e^{-\psi(\ub)} = \exp \left \{ - \int_{\R^{+} \times \sy}  \left[1 - e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} \right] \nu(ds, dy) \right\} $. Hence, finally, $E \left(e^{-\int_\sy h(y) \thh(dy)} \mid y_1 \in C_1, \dots, y_n \in C_n\right)$
+\begin{eqnarray*}
+& = &  \int_{{\R^{+}}^n} E_{\thh^{(\ub)}}\left[e^{-\int_\sy h(y) \thh^{(\ub)}(dy)}\right] \cdot \prod_{j=1}^n E\left[e^{-h(y_j)} J^{(\ub, y_j)}_j \right] \cdot \frac{ D  \cdot  e^{-\psi(\ub)} \ d \ub }{\int_{{\R^{+}}^n}   e^{-\psi(\ub)}  \cdot  D \ d \ub} \\
+& = &  \int_{{\R^{+}}^n} E\left[e^{-\int_\sy h(y) \thh(dy)} \big| \sd_n,  \ub \right] \cdot \Pr(\ub \mid \sd_n) \ d\ub
+\end{eqnarray*} 
+\noindent Notes: For this proof, we do not need Result 3.1 and 3.2. I think they will be needed when we consider ties in our proof.
+\subsection{Theorem 1 (with no ties)}
+Hence, $\thh \mid \ub, \sd_n := \thh^{(\ub, \sd_n)} \stackrel{d}{=} \thh^{(\ub)} + \sum_{i=1}^n J^{(\ub, y_i)}_i \delta_{y_i}$, where 
+\begin{enumerate}
+ \item[1.]  $\thh^{(\ub)} \sim \text{ CRM}\left(\nu^{(\ub)}\right) \text{ with } \nu^{(\ub)} (ds, dy) = e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} \rho(ds \mid y) H(dy)$
+ \item[2.] $\Pr\left(J^{(\ub, y_j)}_j\right) \propto s e^{-s \left\{\sum_{i=1}^n u_i \exp(\th_i y_j)\right\}} \rho(ds \mid y_j)$
+\end{enumerate}
+\subsection{Proposition 1 (with no ties)}
+Next $\Pr\left(\ub \mid \sd_n, \thh \right) \propto D  \cdot  e^{-\psi(\ub)} =\left[\prod_{\bcancel{i} \textcolor{red}{j = 1}}^n \int_{\R^{+}} s e^{-s \left\{\sum_{i=1}^n u_i \exp(\th_i y_{\bcancel i j})\right\}} \rho(ds \mid y_{\bcancel i j})\right] e^{-\psi(\ub)}$, with $e^{-\psi(\ub)} = \exp \left \{ - \int_{\R^{+} \times \sy}  \left[1 - e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} \right] \nu(ds, dy) \right\} $. 
+\vspace{2mm}
+
+\noindent \textcolor{blue}{Hence, we have a Gibbs sampler ready!}
+\vspace{3mm}
+
+\noindent For DP (i.e., gamma CRM on $\thh$), calculate  $\psi(\ub)$, \dots \textcolor{blue}{See `Posterior sampling steps' document.}
+
+\subsection{Theorem 1 (with ties)}
+Suppose, $(z_1, \dots, z_\tn)$ denotes the unique observations in the data and there are $n_j$ repetitions for $z_j$, $j = 1, \dots, \tn$. Hence, $\sum_{j=1}^{\tn} n_j = n$.
+\vspace{1mm}
+
+\noindent Hence, $\thh \mid \ub, \sd_n := \thh^{(\ub, \sd_n)} \stackrel{d}{=} \thh^{(\ub)} + \sum_{i=1}^\tn J^{(\ub, z_i)}_i \delta_{z_i}$, where 
+\begin{enumerate}
+ \item[1.]  $\thh^{(\ub)} \sim \text{ CRM}\left(\nu^{(\ub)}\right) \text{ with } \nu^{(\ub)} (ds, dy) = e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} \rho(ds \mid y) H(dy)$
+ \item[2.] $\Pr\left(J^{(\ub, z_j)}_j\right) \propto s^{n_i} e^{-s \left\{\sum_{i=1}^n u_i \exp(\th_i z_j)\right\}} \rho(ds \mid z_j)$
+\end{enumerate}
+\subsection{Proposition 1 (with ties)}
+Next $\Pr\left(\ub \mid \sd_n, \thh \right) \propto D  \cdot  e^{-\psi(\ub)} =\left[\prod_{i=1}^\tn \cancel{\textcolor{red}{u^{n_i - 1}_i}} \int_{\R^{+}} s^{n_i} e^{-s \left\{\sum_{i=1}^n u_i \exp(\th_i y_i)\right\}} \rho(ds \mid z_i)\right] e^{-\psi(\ub)}$, with $e^{-\psi(\ub)} = \exp \left \{ - \int_{\R^{+} \times \sy}  \left[1 - e^{- \left\{\sum_{i=1}^n u_i \exp(\th_i y) \right\} s} \right] \nu(ds, dy) \right\} $. \textcolor{blue}{[Instead of $\prod_{i=1}^\tn u^{n_i - 1}_i$ should we have $\left(\sum_{i=1}^n u_i \exp(\th_i y_i)\right)^{n-1}$? ]}
+
+\vspace{2mm}
+
+\subsection[]{The $\mathbf{u}$ business}
+$u_j = \frac{\Gamma}{T_j}$, where $\Gamma \sim Gamma(1, 1)$ independently of $T_j = \int_{\sy} \exp(\theta_j y) \widetilde H(dy)$. Next we use this transformation $(\Gamma, T_j) \to (u_j, T_j)$. Jacobian is $T_j \implies P(u_j, T_j) = T_j \exp(-T_j u_j) P(T_j)$. This further implies $u_j \mid T_j \sim Gamma(1, T_j) \implies \int_{R^+} T_j \exp(-T_j u_j) du_j = 1$ and we started with $\frac{1}{T_j} = \int_{R^+} \exp(-T_j u_j) du_j$.
+
+\section[]{$\theta$ updating}
+In Section \ref{sec2}, we assume $\th_i$ is fixed through out. We can add one more layer to our existing model as, $\theta_i \mid \beta, \thh \sim N(\xi_i, c)$ with very small $c$ and $\xi_i = {b^\prime}^{-1}(\mu_i; \thh)$ with $g(\mu_i) = x'_i\beta$. In this case, we can do Gibbs update: $\beta \to \bth \to \mathbf{u} \to \thh \to \beta \to \dots$
+\end{document}
