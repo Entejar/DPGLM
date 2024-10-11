@@ -103,22 +103,22 @@ sim_III <- function(n, link) {
 n <- 500
 dat <- sim_III(n, link = 'logit')
 
-# For beta_0 initialization
-Ybar <- mean(dat$Y)
-beta0Init <- log(Ybar / (1 - Ybar))    # a good initialization for beta_0 = log(true_mu0 / (1 - true_mu0))
-
-Y <- dat[, 1] - Ybar
-X <- matrix(1, n, 2)
-data <- data.frame(Y, X)
-lm(Y ~ X, data = data.frame(Y, X))
+# # For beta_0 initialization
+# Ybar <- mean(dat$Y)
+# beta0Init <- log(Ybar / (1 - Ybar))    # a good initialization for beta_0 = log(true_mu0 / (1 - true_mu0))
+# 
+# Y <- dat[, 1] - Ybar
+# X <- matrix(1, n, 2)
+# data <- data.frame(Y, X)
+# lm(Y ~ X, data = data.frame(Y, X))
 
 rho  <- 1
 M <- 20
 alpha <- 1
 G0.dist <- 6
 delta <- 2
-kdist <- 6                         # ATTENTION: Choose K as 6 or 7?
-sigmaTheta <- rep(0.001, n)
+kdist <- 6                             # ATTENTION: Choose K as 6 or 7?
+sigma_theta <- 0.001
 a00 <- 0
 b00 <- 1
 c0 <- 0.025
@@ -130,7 +130,7 @@ tuning.params <- list(rho = rho,
                       G0.dist = G0.dist,
                       delta = delta,
                       k.dist = kdist,
-                      sigmaTheta = sigmaTheta,
+                      sigma_theta = sigma_theta,
                       a00 = a00,
                       b00 = b00,
                       c0 = c0,
@@ -138,14 +138,18 @@ tuning.params <- list(rho = rho,
 
 y <- dat[, 1]
 X <- dat[, -1]
-out100 <- dpglm(y = y[1:100], X = X[1:100,], link = 'logit', iter = 100, tuning.params = tuning.params)
+out100 <- dpglm(y = y[1:100], 
+                X = X[1:100,], 
+                iter = 100, 
+                tuning.params = tuning.params)
+
 out500 <- dpglm(y, X, 'logit', 500)
 out50 <- dpglm(y[1:200], X[1:200,], 'logit', 500)
 
 
 out100_total <- out100
 out500_total <- out500
-out50_total <- out50 #until this point, it is working fine
+out50_total <- out50          # until this point, it is working fine
 
 burn <- 10
 out100$beta <- out100$beta[-c(1:burn), ]

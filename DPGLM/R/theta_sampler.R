@@ -4,7 +4,7 @@ theta_tilde_sampler <- function(meanY_x,
                                 sigma_theta,
                                 z,
                                 locations,
-                                jumps) {
+                                jumps, thetastart) {
   theta <-  gldrm:::getTheta(
     spt = locations,
     f0  = jumps,

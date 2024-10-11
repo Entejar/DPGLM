@@ -4,7 +4,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 
-
+//[[Rcpp::export]]
 double logit(double x) {
   return log(x) - log(1.0-x);
 }

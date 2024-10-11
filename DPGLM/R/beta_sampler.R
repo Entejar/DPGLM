@@ -10,10 +10,10 @@ beta_sampler <- function(y, X, z.tld, J.tld, zMN, zMX, beta, Sig, mubetaprior,
   # proposed mu
   pr_mu <- as.numeric(expit(X %*% pr_bt))
   # proposed theta
-  pr_theta <- theta_solver(crm[1,], crm[2,], pr_mu, NULL)$tht
+  pr_theta <- theta_solver(crm[1,], crm[2,], pr_mu, NULL)$theta
   # current theta
   cr_theta <- theta_solver(crm[1,], crm[2,], 
-                           as.numeric(expit(X %*% beta)), NULL)$tht
+                           as.numeric(expit(X %*% beta)), NULL)$theta
   # check if proposed mu is within bounds
   if(sum(zMN <= pr_mu & pr_mu <= zMX) == n){
     # log likelihood

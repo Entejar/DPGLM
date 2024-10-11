@@ -1,5 +1,8 @@
-dpglm <- function(y, X, link, iter, tuning.params){
-
+dpglm <- function(y, X, iter, tuning.params){
+  
+  # Link Function -----------------------------------------------------------------------
+  link <- 'logit'
+  
   # Tuning Parameters --------------------------------------------------------------------
   rho <- tuning.params$rho
   M <- tuning.params$M
@@ -7,7 +10,7 @@ dpglm <- function(y, X, link, iter, tuning.params){
   G0.dist <- tuning.params$G0.dist
   delta <- tuning.params$delta
   K.dist <- tuning.params$K.dist
-  sigmaTheta <- tuning.params$sigmaTheta
+  sigma_theta <- tuning.params$sigma_theta
   a00 <- tuning.params$a00
   b00 <- tuning.params$b00
   c0 <- tuning.params$c0
@@ -26,8 +29,8 @@ dpglm <- function(y, X, link, iter, tuning.params){
   z_samples <- matrix(NA, nrow = iter, ncol = n)
   crm_samples   <- list()
   init <- gldrm(y ~ X[, -1], link = link)
-  beta0 <- g(mu0)
-  if(n <= 250){
+  beta0 <- log(mu0 / (1 - mu0))   
+  if(floor(n / p) < 100){ 
     beta <- beta_samples[1,] <- c(beta0, rep(0, p - 1))
   } else{
     beta <- beta_samples[1,] <- c(beta0, init$beta[2:p] %>% as.numeric())
@@ -36,9 +39,9 @@ dpglm <- function(y, X, link, iter, tuning.params){
   z.tld <- spt <- init$spt
   J.tld <- Jstar <- init$f0
   crm_samples[[1]] <- list(z.tld = spt, J.tld = Jstar)
-  mu <- link_fn(X %*% beta, link)$mu
+  mu <- expit(X %*% beta)
   out <- theta_solver(spt, J.tld, mu, NULL)
-  theta_samples[1, ] <- tht <- out$tht
+  theta_samples[1, ] <- tht <- out$theta
   btht <- out$btht
   bpr2 <- out$bpr2
   z_samples[1, ] <- z <- y
@@ -52,33 +55,30 @@ dpglm <- function(y, X, link, iter, tuning.params){
   mubetaprior <-  rep(0, p)
   Sigbetaprior <- beta.sigma * diag(p)
   Sig <- rho * init$varbeta
-  mu0G <- -99
-  sigma0G <- -99
 
   for(itr in 2:iter){
     # beta update -------------------------------------
     zMN <- min(z.tld)
     zMX <- max(z.tld)
-    beta <- beta_sampler(y, X, z.tld, J.tld, zMN, zMX, beta, Sig, mubetaprior, Sigbetaprior, link, c0,
-                         sigmaTheta[1])
+    beta <- beta_sampler(y, X, z.tld, J.tld, zMN, zMX, beta, Sig, mubetaprior, Sigbetaprior, c0, sigma_theta) 
     meanY_x <- as.numeric(expit(X %*% beta))
     
     # theta_tilde update ------------------------------------
-    theta_tilde <- theta_tilde_sampler(meanY_x, sigma_theta, z, locations, jumps)
+    theta_tilde <- theta_tilde_sampler(meanY_x, sigma_theta, z, locations = z.tld, jumps = J.tld, thetastart = tht)
 
     # u update ----------------------------------------
-    u <- u_sampler(u, tht, z, n, alpha, G0.dist, mu0G, sigma0G, delta, a00, b00)
+    u <- u_sampler(u, z, tht, alpha, delta)
 
     # CRM update --------------------------------------
-    crm <- crm_sampler(M, u, zstar, nstar, tht, n, alpha, G0.dist, a00, b00, mu, z.tld, J.tld)
-    z.tld <- crm$z.tld
-    J.tld <- crm$J.tld
+    crm <- crm_sampler(M, u, zstar, nstar, tht, alpha, mu, y, z.tld, J.tld)
+    z.tld <- crm$z_tld
+    J.tld <- crm$J_tld
 
     # z update ------------------------------------------------------------------
     sorted_crm <- data.frame(z.tld = z.tld, J.tld = J.tld) %>% arrange(z.tld)
     z.tld <- sorted_crm[, 1]
     J.tld <- sorted_crm[, 2]
-    z <- z_sampler(y, n, c0, kdist, z.tld, J.tld, tht)
+    z <- z_sampler(y, c0, tht, sorted_crm %>% as.matrix())
 
     # zstar and nstar update ----------------------------------------------------
     resampled_z <- resample_zstar(z)
@@ -99,3 +99,6 @@ dpglm <- function(y, X, link, iter, tuning.params){
   }
   return(list(z = z_samples, beta = beta_samples, theta = theta_samples, crm = crm_samples))
 }
+
+
+## Some problems: theta_solver (need single mu0?), link?
