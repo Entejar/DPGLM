@@ -45,8 +45,7 @@ f00 <- dbeta(true_spt, shape1 = a, shape2 = b)
 # Simulation: Setting I
 
 sim_I <- function(n) {
-  X     <- cbind(1, matrix(c(rnorm(n, 0, 1), rnorm(n, 1, 1)), ncol = 2))
-  X[, -1] <- scale(X[, -1])
+  X     <- cbind(1, matrix(c(rnorm(n, 1, 0.5), rnorm(n, 2, 1)), ncol = 2))
   X       <- X %>% as.matrix()
   btheta <- theta <- rep(0, n)
   fY <- t(sapply(1:n, function(i) {
@@ -59,8 +58,7 @@ sim_I <- function(n) {
 }
 
 sim_II <- function(n, p0, p1) {
-  X     <- cbind(1, matrix(c(runif(n, 1, 3), runif(n, -1, 1)), ncol = 2))
-  X[, -1] <- scale(X[, -1])
+  X     <- cbind(1, matrix(c(rnorm(n, 1, 0.5), rnorm(n, 2, 1)), ncol = 2))
   X       <- X %>% as.matrix()
   btheta <- theta <- rep(0, n)
   fY <- t(sapply(1:n, function(i) {
@@ -80,16 +78,13 @@ sim_II <- function(n, p0, p1) {
 }
 
 sim_III <- function(n, link) {
-  X     <- cbind(1, matrix(c(runif(n, 1, 3), runif(n, -1, 1)), ncol = 2))
-  X[, -1] <- scale(X[, -1])
+  X     <- cbind(1, matrix(c(rnorm(n, 1, 1), rnorm(n, 2, 1)), ncol = 2))
   X       <- X %>% as.matrix()
-  beta <- c(0.1, 0.25, 0.75)
-  mu <- link_fn(X %*% beta, link)$mu
-  out <- sapply(1:n, function(i){
-    theta_solver(true_spt, true_f0, mu[i], NULL)
-  })
-  theta <- out[2, ] %>% unlist()
-  btheta <- out[3, ] %>% unlist()
+  beta <- c(-0.7, 0.2, -0.1)
+  mu <- link_fun(X %*% beta, link)$mu
+  out <- theta_sol(true_spt, true_f0, mu, NULL)
+  theta <- out$theta
+  btheta <- out$btht
   fY <- t(sapply(1:n, function(i) {
     exp(theta[i] * true_spt - btheta[i]) * true_f0
   }))
@@ -102,15 +97,6 @@ sim_III <- function(n, link) {
 # Unit Testing
 n <- 500
 dat <- sim_III(n, link = 'logit')
-
-# # For beta_0 initialization
-# Ybar <- mean(dat$Y)
-# beta0Init <- log(Ybar / (1 - Ybar))    # a good initialization for beta_0 = log(true_mu0 / (1 - true_mu0))
-# 
-# Y <- dat[, 1] - Ybar
-# X <- matrix(1, n, 2)
-# data <- data.frame(Y, X)
-# lm(Y ~ X, data = data.frame(Y, X))
 
 rho  <- 1
 M <- 20
@@ -136,41 +122,42 @@ tuning.params <- list(rho = rho,
                       c0 = c0,
                       beta.sigma = beta.sigma)
 
-y <- dat[, 1]
-X <- dat[, -1]
+y <- dat[, 1] %>% as.numeric()
+X <- dat[, -1] %>% as.matrix()
+
+gldrm_fit <- gldrm(y ~ X[, -1], link = 'logit')
+gldrm_fit
+
 out100 <- dpglm(y = y[1:100], 
                 X = X[1:100,], 
                 iter = 100, 
                 tuning.params = tuning.params)
 
-out500 <- dpglm(y, X, 'logit', 500)
-out50 <- dpglm(y[1:200], X[1:200,], 'logit', 500)
+out500 <- dpglm(y = y, 
+                X = X, 
+                iter = 100, 
+                tuning.params = tuning.params)
 
 
 out100_total <- out100
 out500_total <- out500
-out50_total <- out50          # until this point, it is working fine
+
 
 burn <- 10
 out100$beta <- out100$beta[-c(1:burn), ]
 out500$beta <- out500$beta[-c(1:burn), ]
-out50$beta <- out50$beta[-c(1:burn), ]
 true_beta <- c(1.28, 0, 0)
-plot(abs(out50$beta[, 1] - true_beta[1]), type = 'l')
+
 plot(abs(out100$beta[, 1] - true_beta[1]), type = 'l')
 plot(abs(out500$beta[, 1] - true_beta[1]), type = 'l')
 
 plot(abs(out100$beta[, 2] - true_beta[2]), type = 'l')
 plot(abs(out500$beta[, 2] - true_beta[2]), type = 'l')
-plot(abs(out50$beta[, 2] - true_beta[2]), type = 'l')
 
 plot(abs(out100$beta[, 3] - true_beta[3]), type = 'l')
 plot(abs(out500$beta[, 3] - true_beta[3]), type = 'l')
-plot(abs(out50$beta[, 3] - true_beta[3]), type = 'l')
 
 r <- 100
-plot(out25$crm[[r]]$z.tld, out25$crm[[r]]$J.tld, type = 'l')
-plot(out50$crm[[r]]$z.tld, out50$crm[[r]]$J.tld, type = 'l')
 plot(out100$crm[[r]]$z.tld, out100$crm[[r]]$J.tld, type = 'l')
 plot(out500$crm[[r]]$z.tld, out500$crm[[r]]$J.tld, type = 'l')
 
@@ -180,25 +167,21 @@ plot(out500$crm[[r]]$z.tld, out500$crm[[r]]$J.tld, type = 'l')
 # abs(colMeans(out100$z) - y[1:100]) %>% mean()
 # abs(colMeans(out500$z) - y) %>% mean()
 
-out50$theta <- out50$theta[-c(1:burn), ]
 out100$theta <- out100$theta[-c(1:burn), ]
 out500$theta <- out500$theta[-c(1:burn), ]
 
-hist(out50$theta)
 hist(out100$theta)
 hist(out500$theta)
 
-theta_est_50 <- mean(colMeans(abs(out50$theta)))
 theta_est_100 <- mean(colMeans(abs(out100$theta)))
 theta_est_500 <- mean(colMeans(abs(out500$theta)))
 
-c(theta_est_50, theta_est_100, theta_est_500)
+c(theta_est_100, theta_est_500)
 
-theta_sd_50 <- mean(apply(out50$theta, 2, sd))
 theta_sd_100 <- mean(apply(out100$theta, 2, sd))
 theta_sd_500 <- mean(apply(out500$theta, 2, sd))
 
-c(theta_sd_50, theta_sd_100, theta_sd_500)
+c(theta_sd_100, theta_sd_500)
 
 plot_grid <- seq(1, length(true_spt), 1)
 yGrid <- true_spt[plot_grid]
@@ -246,13 +229,11 @@ f_est_fn <- function(out) {
 
 baseDensity_100 <- f_est_fn(out100)
 baseDensity_500 <- f_est_fn(out500)
-baseDensity_50 <- f_est_fn(out50)
 
 
 # Comparing f_0 and F_0 with truths
 
 plot(yGrid, F0_true, type = 'l', col = 'black', lwd = 1, ylim = c(0, 1))
-lines(yGrid, rowMeans(baseDensity_50$F0_est), col = 'red', lwd = 1)
 lines(yGrid, rowMeans(baseDensity_100$F0_est), col = 'red', lwd = 1)
 lines(yGrid, rowMeans(baseDensity_500$F0_est), col = 'green', lwd = 1)
 
@@ -264,25 +245,23 @@ total_variation_distance <- function(f1, f2) {
 
 # Comparing F_0 with truth
 
-TV_50 <- total_variation_distance(rowMeans(baseDensity_50$F0_est) %>% as.vector(), F0_true)
 TV_100 <- total_variation_distance(rowMeans(baseDensity_100$F0_est)%>% as.vector(), F0_true)
 TV_500 <- total_variation_distance(rowMeans(baseDensity_500$F0_est) %>% as.vector(), F0_true)
 
-c(TV_50, TV_100, TV_500)
+c(TV_100, TV_500)
 
 # # Comparing f_0 with truth
-# TV_50_f0 <- total_variation_distance(rowMeans(baseDensity_25$f0_est) %>% as.vector(), f0_true)
 # TV_100_f0 <- total_variation_distance(rowMeans(baseDensity_100$f0_est) %>% as.vector(), f0_true)
 # TV_500_f0 <- total_variation_distance(rowMeans(baseDensity_500$f0_est) %>% as.vector(), f0_true)
 #
-# c(TV_50_f0, TV_100_f0, TV_500_f0)
+# c(TV_100_f0, TV_500_f0)
 
 # # Parallel Loop
 # num_datasets <- 1
 # p0 <- 0.1
 # p1 <- 0.4
 # sim_study <- list()
-# nVec <- c(50, 100, 500)
+# nVec <- c(100, 500)
 # scenarios <- 1:3
 # set <- expand.grid(nVec, scenarios)
 # R <- nrow(set)
@@ -311,7 +290,7 @@ c(TV_50, TV_100, TV_500)
 #
 #
 # # # Save result
-# # saveRDS(sim_study, file = "0707_dpglm_simulation.rds")
+# # saveRDS(sim_study, file = "dpglm_simulation.rds")
 #
 # Sys.time() - start_time
 #
@@ -339,7 +318,7 @@ c(TV_50, TV_100, TV_500)
 # #
 # #
 # # # # Save result
-# # # saveRDS(sim_study, file = "0707_dpglm_simulation.rds")
+# # # saveRDS(sim_study, file = "dpglm_simulation.rds")
 # #
 # # Sys.time() - start_time
 #

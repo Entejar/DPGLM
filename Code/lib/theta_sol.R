@@ -1,11 +1,13 @@
-theta_solver <- function(locations, jumps, meanY_x, thetastart) {
+theta_sol <- function(locations, jumps, meanY_x, thetastart) {
   out <- gldrm:::getTheta(
     spt = locations,
     f0  = jumps,
     mu  = meanY_x,
     sampprobs  = NULL,
     ySptIndex  = NULL,
-    thetaStart = thetastart)
+    thetaStart = thetastart
+  )
+  
   theta   <- out$theta
   bprime2 <- out$bPrime2
   btheta <- apply(exp(outer(theta, locations, "*")), 1, function(row)
@@ -15,7 +17,5 @@ theta_solver <- function(locations, jumps, meanY_x, thetastart) {
               theta = theta, 
               btht = btheta))
 }
-
-
 
 

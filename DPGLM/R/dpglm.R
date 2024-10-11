@@ -29,18 +29,18 @@ dpglm <- function(y, X, iter, tuning.params){
   z_samples <- matrix(NA, nrow = iter, ncol = n)
   crm_samples   <- list()
   init <- gldrm(y ~ X[, -1], link = link)
-  beta0 <- log(mu0 / (1 - mu0))   
-  if(floor(n / p) < 100){ 
-    beta <- beta_samples[1,] <- c(beta0, rep(0, p - 1))
-  } else{
-    beta <- beta_samples[1,] <- c(beta0, init$beta[2:p] %>% as.numeric())
-  }
-
+  # beta0 <- log(mu0 / (1 - mu0))   
+  # if(floor(n / p) < 100){ 
+  #   beta <- beta_samples[1,] <- c(beta0, rep(0, p - 1))
+  # } else{
+  #   beta <- beta_samples[1,] <- c(beta0, init$beta[2:p] %>% as.numeric())
+  # }
+  beta_samples[1, ] <- beta <- init$beta %>% as.numeric()
   z.tld <- spt <- init$spt
   J.tld <- Jstar <- init$f0
   crm_samples[[1]] <- list(z.tld = spt, J.tld = Jstar)
   mu <- expit(X %*% beta)
-  out <- theta_solver(spt, J.tld, mu, NULL)
+  out <- theta_solver(locations = spt, jumps = J.tld, meanY_x = mu, thetastart = NULL)
   theta_samples[1, ] <- tht <- out$theta
   btht <- out$btht
   bpr2 <- out$bpr2
@@ -48,7 +48,6 @@ dpglm <- function(y, X, iter, tuning.params){
   temp <- resample_zstar(z)
   zstar <- temp$zstar
   nstar <- temp$nstar
-
 
   T.vec <- exp(btht)
   u <- rgamma(n, shape = 1, rate = T.vec)
@@ -99,6 +98,3 @@ dpglm <- function(y, X, iter, tuning.params){
   }
   return(list(z = z_samples, beta = beta_samples, theta = theta_samples, crm = crm_samples))
 }
-
-
-## Some problems: theta_solver (need single mu0?), link?

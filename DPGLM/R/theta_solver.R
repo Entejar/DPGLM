@@ -5,14 +5,18 @@ theta_solver <- function(locations, jumps, meanY_x, thetastart) {
     mu  = meanY_x,
     sampprobs  = NULL,
     ySptIndex  = NULL,
-    thetaStart = thetastart)
+    thetaStart = thetastart
+  )
+  
   theta   <- out$theta
   bprime2 <- out$bPrime2
   btheta  <- b_theta(locations, jumps, theta)
   
-  return(list(bpr2 = bprime2, 
-              theta = theta, 
-              btht = btheta))
+  return(list(
+    bpr2 = bprime2,
+    theta = theta,
+    btht = btheta
+  ))
 }
 
 

@@ -4,16 +4,15 @@ beta_sampler <- function(y, X, z.tld, J.tld, zMN, zMX, beta, Sig, mubetaprior,
   n <- dim(X)[1]
   p <- dim(X)[2]
   crm <- matrix(c(z.tld, J.tld), nrow = 2, byrow = T)
+  cr_theta <- theta_solver(locations = crm[1,], jumps = crm[2,], meanY_x = as.numeric(expit(X %*% beta)), thetastart = NULL)$theta
   
   # proposed beta
   pr_bt <- as.vector(mvrnormArma(1, beta, Sig)) 
   # proposed mu
   pr_mu <- as.numeric(expit(X %*% pr_bt))
   # proposed theta
-  pr_theta <- theta_solver(crm[1,], crm[2,], pr_mu, NULL)$theta
-  # current theta
-  cr_theta <- theta_solver(crm[1,], crm[2,], 
-                           as.numeric(expit(X %*% beta)), NULL)$theta
+  pr_theta <- theta_solver(locations = crm[1,], jumps = crm[2,], meanY_x = pr_mu, thetastart = cr_theta)$theta
+  
   # check if proposed mu is within bounds
   if(sum(zMN <= pr_mu & pr_mu <= zMX) == n){
     # log likelihood

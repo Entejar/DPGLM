@@ -166,15 +166,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // b_theta
-double b_theta(const arma::vec& s_k, const arma::vec& f_k, double theta_i);
-RcppExport SEXP _DPGLM_b_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP theta_iSEXP) {
+arma::vec b_theta(const arma::vec& s_k, const arma::vec& f_k, const arma::vec& theta);
+RcppExport SEXP _DPGLM_b_theta(SEXP s_kSEXP, SEXP f_kSEXP, SEXP thetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type s_k(s_kSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type f_k(f_kSEXP);
-    Rcpp::traits::input_parameter< double >::type theta_i(theta_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(b_theta(s_k, f_k, theta_i));
+    Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(b_theta(s_k, f_k, theta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -240,6 +240,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type z_tld(z_tldSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type J_tld(J_tldSEXP);
     rcpp_result_gen = Rcpp::wrap(crm_sampler(M, u, zstar, nstar, tht, alpha, mu, y, z_tld, J_tld));
+    return rcpp_result_gen;
+END_RCPP
+}
+// logit
+double logit(double x);
+RcppExport SEXP _DPGLM_logit(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(logit(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -402,6 +413,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DPGLM_L_theta", (DL_FUNC) &_DPGLM_L_theta, 5},
     {"_DPGLM_llik_beta", (DL_FUNC) &_DPGLM_llik_beta, 7},
     {"_DPGLM_crm_sampler", (DL_FUNC) &_DPGLM_crm_sampler, 10},
+    {"_DPGLM_logit", (DL_FUNC) &_DPGLM_logit, 1},
     {"_DPGLM_expit", (DL_FUNC) &_DPGLM_expit, 1},
     {"_DPGLM_logpdf_unif", (DL_FUNC) &_DPGLM_logpdf_unif, 3},
     {"_DPGLM_logpdf_mvnorm", (DL_FUNC) &_DPGLM_logpdf_mvnorm, 3},

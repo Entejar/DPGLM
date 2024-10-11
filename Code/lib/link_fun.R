@@ -1,4 +1,4 @@
-link_fn <- function(v, link){
+link_fun <- function(v, link){
   # for logit link
   if(link == "logit")
   {
