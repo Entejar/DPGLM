@@ -130,7 +130,7 @@
 
 \renewcommand{\baselinestretch}{1.8}
 
-\title{DpGLM: Semiparametric Bayesian Inference for a GLM Using Inhomogeneous Normalized Random Measures
+\title{DPGLM: Semiparametric Bayesian Inference for a GLM Using Inhomogeneous Normalized Random Measures
 %DP--SPGLM: A novel varying-weights DDP for SPGLM 
 %DP--SPGLM: A novel varying-weights DDP framework, where GLM meets DP
 }
@@ -157,7 +157,7 @@ model.
 \section{Introduction}
 We introduce a semi-parametric Bayesian extension of the
 semi-parametric GLM introduced in
-\citeab{rathouz2009generalized}. Under the proposed model the
+\citeab{rathouz2009generalized}. Under the proposed model, the
 marginal distribution conditional on a given covariate takes the form
 of an inhomogeneous normalized random measure  (NRM)
 (\citeaa{regazzini2003distributional}). The joint model (across covariates $x$) is a  variation of the popular dependent Dirichlet process (DDP) model
@@ -179,11 +179,11 @@ in \citeab{james2009posterior} allows for straightforward posterior simulation. 
 
 \paragraph*{\blau SPGLM}
 We first briefly review the semi-parametric GLM introduced in
-\citeab{rathouz2009generalized}. Consider a GLM
+\citeab{rathouz2009generalized}. Consider a GLM with density
 \begin{equation}
   y \sim p(y \mid x) = p_x(y) \propto \exp (\th_x y)\tmu(y) \label{spglm:eq1} 
 \end{equation}
-with response $y \in \YY \subset \RR$ and a
+with continuous response $y \in \YY \subset \RR$ and a
 p-dimensional covariate vector $x \in \mathcal{X}$ and (log)
 normalization constant 
 \begin{eqnarray}
@@ -195,10 +195,10 @@ a  baseline density $f_{\tmu} = \tmu/\tmu(\YY)$
 in the GLM \eqref{spglm:eq1}. Whilein the classical GLM the baseline
 distribution is assumed to be in a parametric family,
 in the semi-parametric SPGLM model the random measure $\tmu(y)$
-itself becomes an unknown parameter. As in the classical GLM, we introduce a linear predictor $\eta = x^T\beta$, \Q{generalise $\eta$?} and a link function $g$ to implicitly define $\th$ by requiring $\lambda = \E(y \mid x) = g^{-1}(\eta)$.
+itself becomes an unknown parameter. As in the classical GLM, we introduce a linear predictor $\eta = x^T\beta$, and a link function $g$ to implicitly define $\th$ by requiring $\lambda = \E(y \mid x) = g^{-1}(\eta)$.
 That is,  
 \begin{equation}
-\lambda(x) = \E(y \mid x) = b^{\prime}(\th_x) = \frac{\int_{\YY} y \exp (\th_x y) \tmu(dy)}{\int_{\YY} \exp (\th_x y) \tmu(dy)}. \ ,\label{spglm:eq3}
+\lambda(x) = \E(y \mid x) = b^{\prime}(\th_x) = \int_{\YY} y \exp \{\th_x y - b(\th_x)\} \tmu(dy). \ ,\label{spglm:eq3}
 \end{equation}
 Noting that $b^{\prime}(\theta)$  is a strictly increasing
 function of $\theta$ we have
@@ -236,7 +236,7 @@ for $p_x$.
 
 
 \paragraph*{\blau Roadmap}
-In Section \refa{subsec:DPSPGLM} we introduce the proposed semiparametric Bayesian extension of the SPGLM, and characterize it as a variation of the popular DDP model in Section \refa{subsec:DDP}, and in Section \refa{subsec:NRM} we show a representation of the implied marginal for one covariate as an inhomogeneous NRM.
+In Section \refa{subsec:DPSPGLM}, we introduce the proposed semiparametric Bayesian extension of the SPGLM, and characterize it as a variation of the popular DDP model in Section \refa{subsec:DDP}, and in Section \refa{subsec:NRM} we show a representation of the implied marginal for one covariate as an inhomogeneous NRM.
 In Section \refa{sec:post} we characterize the posterior distribution
 under the DP--SPGLM by showing it to be conditionally conjugate given
 auxiliary variables similar to the construction used in
@@ -276,7 +276,7 @@ An alternative  defining property of the DP prior is as a normalized completely 
 A CRM is characterized by its Laplace transform $\E[\exp\{ \int h(y) \tmu(dy) \}]$, which in turn is completely characterized by the L\'evy intensity $\nu(ds, dy)$ that appears in the L\'evy-Khintchine representation
 \begin{equation}
 \E\left[e^{-\int_\sy h(y) \mu(dy)}\right] = \exp \left[- \int_{R^+
-    \times \sy} \left\{1 - e^{-sf(y)}\right\}\nu(ds, dy) \right].
+    \times \sy} \left\{1 - e^{-sh(y)}\right\}\nu(ds, dy) \right].
 \label{eq:LK}
 \end{equation}
 If $\nu$ factors as $\nu(s,y)= \rho(s)\, G_0(y)$ the CRM is known as
@@ -536,17 +536,17 @@ Similar results as above hold, starting with latent variables $u_j
 
 \section{Simulation Studies}
 \label{sec:sim}
-We proceed with simulation studies to evaluate the operating characteristics of the DP-GLM model. Our investigation addresses the following key questions: \newline (Q1) How does the model perform in terms of predictive accuracy when estimating the baseline density, $f_{\tmu}(y)$, under various scenarios? \newline (Q2) Do the credible intervals for $f_{\tmu}(y)$ achieve coverage rates close to their nominal levels? \newline (Q3) In scenarios where the response is independent of predictors, does $\theta_{x; n} := [\theta_x \mid \mathcal{D}_n]$ converge in probability to zero, or alternatively, do the credible intervals for $\theta_x$ attain nominal coverage rates? \newline  (Q4) Do the credible intervals for $\beta_j$ parameters attain nominal coverage? How is their predictive accuracy?
+We proceed with simulation studies to evaluate the frequentist operating characteristics of the DP-GLM model. Our investigation addresses the following key questions: \newline (Q1) How does the model perform in terms of predictive accuracy when estimating the baseline density, $f_{\tmu}(y)$, under various scenarios? \newline (Q2) Do the credible intervals for $f_{\tmu}(y)$ achieve coverage rates close to their nominal levels? \newline (Q3) In scenarios where the response is independent of predictors, does $\theta_{x; n} := [\theta_x \mid \mathcal{D}_n]$ converge in probability to a constant (in $x$), or alternatively, do the credible intervals for $\theta_x$ attain nominal coverage rates? \newline  (Q4) Do the credible intervals for $\beta_j$ parameters attain nominal coverage? How is their predictive accuracy?
 
 We consider a data generating mechanism where the response $y$ is sampled from the Speech Intelligibility dataset (for dataset details, see Section \refa{sec:ex}).
 \begin{itemize}
-    \item \underline{Null case (setting I):} Let $f^{(kde)}_{\tmu}$ denote the kernel density estimate based on the response data from Speech Intelligibility dataset (ignoring the covariates). We consider $f^{(kde)}_{\tmu}$ as the simulation truth for the baseline density $f_{\tmu}$. Covariates are generated as: $x_{1i} = 1, x_{2i} \sim Unif(a_1, a_2), x_{3i} \sim Unif(b_1, b_2)$, where we take $a_1 = 1, a_2 = 3, b_1 = -1, b_2 = 1$. We sample $y$ independent of $x$ i.e, $y_i \sim f^{(kde)}_{\tmu}$. We use $\mathcal{D}_n$ to refer the observed data $\{x_i, y_i\}_{i=1}^n$. This setting aims to address Q1$-$Q3.    
+    \item \underline{Null case (setting I):} Let $f^{(kde)}_{\tmu}$ denote the kernel density estimate based on the response data from Speech Intelligibility dataset (ignoring the covariates). We consider $f^{(kde)}_{\tmu}$ as the simulation truth for the baseline density $f_{\tmu}$. Covariates are generated as: $x_{0i} = 1, x_{1i} \sim Unif(a_1, a_2), x_{2i} \sim Unif(b_1, b_2)$, where we take $a_1 = 1, a_2 = 3, b_1 = -1, b_2 = 1$. We sample $y$ independent of $x$ i.e, $y_i \sim f^{(kde)}_{\tmu}$. We use $\mathcal{D}_n$ to refer the observed data $\{x_i, y_i\}_{i=1}^n$. This setting aims to address Q1$-$Q3.    
 
     \item \underline{Point masses (setting II):} Let $f^{(Beta)}_{\tmu}$ denote the $\text{Beta}(a,b)$ density estimate based on the response data from Speech Intelligibility dataset (ignoring the covariates). We consider $f^{(Beta)}_{\tmu}$ as the simulation truth for $f_{\tmu}$, with additional point masses at $y = 0$ and $y = 1$. The rest is same as in Setting I. Apart from Q1$-$Q3, the primary objective here is to assess whether the model accurately estimates the point masses. 
 
-    \item \underline{Regression (setting III):} We consider the same framework as in Setting I, with one modification: the sampling $y$ is now dependent on $x$. Specifically, we sample $y_i \sim p(y_i \mid x_i) \propto \exp(\theta_{x_i} y_i)f^{(kde)}_{\tmu}(y_i)$, where $\theta_x \sim \text{Normal}(\widetilde \theta_x, \sigma^2_\theta)$. Here, $\widetilde \theta_x = {b^\prime}^{-1}(g^{-1}(\eta_x))$, with $\eta_x = x^T\beta$. We set $\beta_1 = 0.1, \beta_2 = 0.25, \beta_3 = 0.75$. This setting aims to address Q1, Q2 and Q4.
+    \item \underline{Regression (setting III):} We consider the same framework as in Setting I, with one modification: the sampling $y$ is now dependent on $x = (x_1, x_2)$. Specifically, we sample $y_i \sim p(y_i \mid x_i) \propto \exp(\theta_{x_i} y_i)f^{(kde)}_{\tmu}(y_i)$, where $\theta_x \sim \text{Normal}(\widetilde \theta_x, \sigma^2_\theta)$, with $\sigma_\theta = 0.001$. Here, $\widetilde \theta_x = {b^\prime}^{-1}(g^{-1}(\eta_x))$, with $\eta_x = \beta_0 + x^T\beta$. We set $\beta_0 = -0.7, \beta^T = (0.2, -0.1)$. This setting aims to address Q1, Q2 and Q4.
 \end{itemize}
- 
+
 
 
 \section{Application to Speech Intelligibility Data}

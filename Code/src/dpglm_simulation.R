@@ -37,7 +37,7 @@ true_f0    <- dat$f0[indx]
 true_mu0 <- sum(true_spt * true_f0) / sum(true_f0)
 
 # Beta(a, b) Fit
-betafit <- MASS::fitdistr(hustadTDMW$mean_intelligibility, dbeta, start = list(shape1 = 1, shape2 = 1))
+betafit <- MASS::fitdistr(hustadTDMW$mean_intelligibility, dbeta, start = list(shape1 = 1, shape2 = 1), lower = c(0, 0))
 a <- betafit$estimate[1]
 b <- betafit$estimate[2]
 f00 <- dbeta(true_spt, shape1 = a, shape2 = b)
@@ -95,7 +95,7 @@ sim_III <- function(n, link) {
 }
 
 # Unit Testing
-n <- 500
+n <- 400
 dat <- sim_III(n, link = 'logit')
 
 rho  <- 1
@@ -128,38 +128,56 @@ X <- dat[, -1] %>% as.matrix()
 gldrm_fit <- gldrm(y ~ X[, -1], link = 'logit')
 gldrm_fit
 
+out25 <- dpglm(y = y[1:25], 
+                X = X[1:25,], 
+                iter = 1000, 
+                tuning.params = tuning.params)
+
 out100 <- dpglm(y = y[1:100], 
                 X = X[1:100,], 
-                iter = 100, 
+                iter = 1000, 
                 tuning.params = tuning.params)
 
-out500 <- dpglm(y = y, 
+out400 <- dpglm(y = y, 
                 X = X, 
-                iter = 100, 
+                iter = 1000, 
                 tuning.params = tuning.params)
 
+burn <- 500
+save <- seq(burn+1, 1000, 10)
 
-out100_total <- out100
-out500_total <- out500
+sqrt(mean(out25$z[save, ] - y[1:25])^2)
+sqrt(mean(out100$z[save, ] - y[1:100])^2)
+sqrt(mean(out400$z[save, ] - y[1:400])^2)
 
+true_beta <- c(-0.7, 0.2, -0.1)
 
-burn <- 10
-out100$beta <- out100$beta[-c(1:burn), ]
-out500$beta <- out500$beta[-c(1:burn), ]
-true_beta <- c(1.28, 0, 0)
+beta_summary <- function(out) {
+  beta_est <- out$beta[-(1:burn), ]
+  beta_est_mean <- colMeans(beta_est)
+  beta_est_sd <- apply(beta_est, 2, sd)
+  beta_est_err <- abs(beta_est_mean - true_beta)
+  return(list(beta_est_mean = beta_est_mean, beta_est_sd = beta_est_sd, 
+              beta_est_err = beta_est_err))
+}
 
-plot(abs(out100$beta[, 1] - true_beta[1]), type = 'l')
-plot(abs(out500$beta[, 1] - true_beta[1]), type = 'l')
+beta_summary(out25)
+beta_summary(out100)
+beta_summary(out400)
 
-plot(abs(out100$beta[, 2] - true_beta[2]), type = 'l')
-plot(abs(out500$beta[, 2] - true_beta[2]), type = 'l')
+plot(abs(out25$beta[-(1:burn), 1] - true_beta[1]), type = 'l')
+plot(abs(out100$beta[-(1:burn), 1] - true_beta[1]), type = 'l')
+plot(abs(out400$beta[-(1:burn), 1] - true_beta[1]), type = 'l')
 
-plot(abs(out100$beta[, 3] - true_beta[3]), type = 'l')
-plot(abs(out500$beta[, 3] - true_beta[3]), type = 'l')
+plot(abs(out25$beta[-(1:burn), 2] - true_beta[2]), type = 'l')
+plot(abs(out100$beta[-(1:burn), 2] - true_beta[2]), type = 'l')
+plot(abs(out400$beta[-(1:burn), 2] - true_beta[2]), type = 'l')
 
-r <- 100
-plot(out100$crm[[r]]$z.tld, out100$crm[[r]]$J.tld, type = 'l')
-plot(out500$crm[[r]]$z.tld, out500$crm[[r]]$J.tld, type = 'l')
+plot(abs(out25$beta[-(1:burn), 3] - true_beta[3]), type = 'l')
+plot(abs(out100$beta[-(1:burn), 3] - true_beta[3]), type = 'l')
+plot(abs(out400$beta[-(1:burn), 3] - true_beta[3]), type = 'l')
+
+## Relevant for testing null case i.e., theta = 0 or constant (theta0) over x
 
 # out100$z <- out100$z[-c(1:burn), ]
 # out500$z <- out500$z[-c(1:burn), ]
@@ -167,25 +185,24 @@ plot(out500$crm[[r]]$z.tld, out500$crm[[r]]$J.tld, type = 'l')
 # abs(colMeans(out100$z) - y[1:100]) %>% mean()
 # abs(colMeans(out500$z) - y) %>% mean()
 
-out100$theta <- out100$theta[-c(1:burn), ]
-out500$theta <- out500$theta[-c(1:burn), ]
-
-hist(out100$theta)
-hist(out500$theta)
-
-theta_est_100 <- mean(colMeans(abs(out100$theta)))
-theta_est_500 <- mean(colMeans(abs(out500$theta)))
-
-c(theta_est_100, theta_est_500)
-
-theta_sd_100 <- mean(apply(out100$theta, 2, sd))
-theta_sd_500 <- mean(apply(out500$theta, 2, sd))
-
-c(theta_sd_100, theta_sd_500)
+# out100$theta <- out100$theta[-c(1:burn), ]
+# out500$theta <- out500$theta[-c(1:burn), ]
+# 
+# hist(out100$theta)
+# hist(out500$theta)
+# 
+# theta_est_100 <- mean(colMeans(abs(out100$theta)))
+# theta_est_500 <- mean(colMeans(abs(out500$theta)))
+# 
+# c(theta_est_100, theta_est_500)
+# 
+# theta_sd_100 <- mean(apply(out100$theta, 2, sd))
+# theta_sd_500 <- mean(apply(out500$theta, 2, sd))
+# 
+# c(theta_sd_100, theta_sd_500)
 
 plot_grid <- seq(1, length(true_spt), 1)
 yGrid <- true_spt[plot_grid]
-
 mu0 <- sum(true_spt * true_f0) / sum(true_f0)
 
 theta <- 0
@@ -202,59 +219,51 @@ for (i in 1:length(yGrid)) {
 
 c0 <- 0.025
 
+save <- seq(burn+1, 1000, 12)
 f_est_fn <- function(out) {
-    itr_indx <- 75:100
-    F0_est <- f0_est <- matrix(NA, nrow = length(yGrid), ncol = length(itr_indx))
-    for (j in 1:length(itr_indx)) {
-      itr <- itr_indx[itr_indx[j]]
-      spt <- out$crm[[itr_indx[j]]]$z.tld
-      f0 <- out$crm[[itr_indx[j]]]$J.tld
-      tht <- theta_solver(spt, f0, mu0, NULL)$tht
-      f0 <- exp(tht * spt) * f0 / sum(exp(tht * spt) * f0)
-      theta <- 0
-      for (i in 1:length(yGrid)) {
-        pro <- exp(theta * spt) * f0  # which is same as f0 for the null case
-        pk  <- pro / sum(pro)
-        indx <- which(spt >= (yGrid[i] - c0) & spt <= (yGrid[i] + c0))
-        f0_est[i, j] <- sum(pk[indx]) * (1 / (2 * c0))
-        indx2 <- which(spt <= yGrid[i] - c0)
-        F0_est[i, j] <- sum(pk[indx2]) +
-          sum(pk[indx] * (yGrid[i] - spt[indx] + c0)/ (2 * c0))
-      }
-
+  itr_indx <- save
+  F0_est <- f0_est <- matrix(0, nrow = length(yGrid), ncol = length(itr_indx))
+  for (j in 1:length(itr_indx)) {
+    spt <- out$crm[[itr_indx[j]]]$z.tld
+    f0 <- out$crm[[itr_indx[j]]]$J.tld
+    theta <- theta_sol(spt, f0, mu0, NULL)$theta
+    f0 <- exp(theta * spt) * f0 / sum(exp(theta * spt) * f0)
+    theta <- 0                       # For null case or f0 / F0
+    for (i in 1:length(yGrid)) {
+      pro <- exp(theta * spt) * f0   # Which is same as f0 for the null case
+      pk  <- pro / sum(pro)
+      indx <- which(spt >= (yGrid[i] - c0) & spt <= (yGrid[i] + c0))
+      f0_est[i, j] <- sum(pk[indx]) * (1 / (2 * c0))
+      indx2 <- which(spt <= yGrid[i] - c0)
+      F0_est[i, j] <- sum(pk[indx2]) +
+        sum(pk[indx] * (yGrid[i] - spt[indx] + c0)/ (2 * c0))
     }
-    return(list(F0_est = F0_est, f0_est = f0_est))
   }
-
-
-baseDensity_100 <- f_est_fn(out100)
-baseDensity_500 <- f_est_fn(out500)
-
-
-# Comparing f_0 and F_0 with truths
-
-plot(yGrid, F0_true, type = 'l', col = 'black', lwd = 1, ylim = c(0, 1))
-lines(yGrid, rowMeans(baseDensity_100$F0_est), col = 'red', lwd = 1)
-lines(yGrid, rowMeans(baseDensity_500$F0_est), col = 'green', lwd = 1)
-
-# Total Variation distance
-total_variation_distance <- function(f1, f2) {
-  differences <- abs(f1 - f2)
-  return(sum(differences) / 2)
+  return(list(F0_est = F0_est, f0_est = f0_est))
 }
 
-# Comparing F_0 with truth
+baseDensity_25 <- f_est_fn(out25)
+baseDensity_100 <- f_est_fn(out100)
+baseDensity_400 <- f_est_fn(out400)
 
-TV_100 <- total_variation_distance(rowMeans(baseDensity_100$F0_est)%>% as.vector(), F0_true)
-TV_500 <- total_variation_distance(rowMeans(baseDensity_500$F0_est) %>% as.vector(), F0_true)
+# Comparing F_0 with truths
+plot(yGrid, F0_true, type = 'l', col = 'black', lwd = 1, ylim = c(0, 1))
+lines(yGrid, rowMeans(baseDensity_100$F0_est), col = 'red', lwd = 1)
+lines(yGrid, rowMeans(baseDensity_400$F0_est), col = 'green', lwd = 1)
 
-c(TV_100, TV_500)
+F0_df <- data.frame(y = yGrid,
+                   F0 = c(F0_true, rowMeans(baseDensity_100$F0_est), rowMeans(baseDensity_400$F0_est)),
+                   n = rep(c('True', '100', '400'), each = length(yGrid)))
 
-# # Comparing f_0 with truth
-# TV_100_f0 <- total_variation_distance(rowMeans(baseDensity_100$f0_est) %>% as.vector(), f0_true)
-# TV_500_f0 <- total_variation_distance(rowMeans(baseDensity_500$f0_est) %>% as.vector(), f0_true)
-#
-# c(TV_100_f0, TV_500_f0)
+ggplot(F0_df, aes(x = y, y = F0, color = n)) +
+  geom_line() +
+  theme_minimal()
+
+# KS Test stat comparison
+
+ks100 <- ks.test(rowMeans(baseDensity_100$F0_est), F0_true)
+ks400 <- ks.test(rowMeans(baseDensity_400$F0_est), F0_true)
+c(ks100$statistic, ks400$statistic)  # KS Test Statistic
 
 # # Parallel Loop
 # num_datasets <- 1

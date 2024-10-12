@@ -5,10 +5,7 @@
 # Load Libraries ---------------------------------------------------------------
 require(foreach)
 require(doParallel)
-require(tidyverse)
-require(gldrm)
-require(mvtnorm)
-require(DpGLM)
+source("load.R")
 
 # Parallel Setup ----------------------------------------------------------------
 num_cores <- 6
@@ -18,11 +15,11 @@ registerDoParallel(cl)
 # Load Data --------------------------------------------------------------------
 hustadTD <- readRDS("/Users/entejar/Library/CloudStorage/Box-Box/DP-GLM/Data/hustadTD.rds")
 
-# Subset TD Data: Multi Word, Ordered y ----------------------------------------
+# Subset TD Data: Multi Word, Ordered y --------------------------------------------------
 hustadTDMW <- filter(hustadTD %>% as.data.frame(),
                      intelligibility_type == 'multiword') %>% arrange(mean_intelligibility)
 
-# KDE --------------------------------------------------------------------------
+# Fit KDE to observed y [For Set I]--------------------------------------------------------
 dens  <- density(
   hustadTDMW$mean_intelligibility,
   kernel = 'gaussian',
@@ -36,11 +33,19 @@ dat   <- data.frame(y = dens$x, f0 = dens$y)
 indx  <- dat$y >= 0 & dat$y <= 1
 true_spt <- dat$y[indx]
 true_f0    <- dat$f0[indx]
+true_mu0 <- sum(true_spt * true_f0) / sum(true_f0)
 
-# Null case data simulation function -------------------------------------------
+# Fit Beta(a, b) to observed y [For Set II]------------------------------------------
+betafit <- MASS::fitdistr(hustadTDMW$mean_intelligibility, dbeta, start = list(shape1 = 1, shape2 = 1), lower = c(0, 0))
+a <- betafit$estimate[1]
+b <- betafit$estimate[2]
+f00 <- dbeta(true_spt, shape1 = a, shape2 = b)
+
+# Data simulation functions: null cases -------------------------------------------
+# Set I
+
 sim_I <- function(n) {
-  X     <- cbind(1, matrix(c(rnorm(n, 0, 1), rnorm(n, 1, 1)), ncol = 2))
-  X[, -1] <- scale(X[, -1])
+  X     <- cbind(1, matrix(c(rnorm(n, 1, 0.5), rnorm(n, 2, 1)), ncol = 2))
   X       <- X %>% as.matrix()
   btheta <- theta <- rep(0, n)
   fY <- t(sapply(1:n, function(i) {
@@ -51,6 +56,27 @@ sim_I <- function(n) {
   })
   return(data.frame(Y, X) %>% arrange(Y))
 }
+
+sim_II <- function(n, p0, p1) {
+  X     <- cbind(1, matrix(c(rnorm(n, 1, 0.5), rnorm(n, 2, 1)), ncol = 2))
+  X       <- X %>% as.matrix()
+  btheta <- theta <- rep(0, n)          # theta <- const = say 1?
+  fY <- t(sapply(1:n, function(i) {
+    f00
+  }))
+  Y     <- sapply(1:n, function(i) {
+    u <- runif(1)
+    if(u < p0){
+      0
+    } else if (u < p0 + p1){
+      1
+    } else {
+      sample(true_spt, 1, prob = f00)
+    }
+  })
+  return(data.frame(Y, X) %>% arrange(Y))
+}
+
 
 dat <- sim_I(500)
 X <- dat[, -1]
@@ -133,8 +159,9 @@ for (i in 1:length(yGrid)) {
 
 burnin <- 100
 iter <- 200
+save <- seq(burn+1, 1000, 12)
 f_est_fn <- function(out) {
-  itr_indx <- (burnin + 1):iter
+  itr_indx <- save
   F0_est <- f0_est <- matrix(NA, nrow = length(yGrid), ncol = length(itr_indx))
   for (j in 1:length(itr_indx)) {
     itr <- itr_indx[itr_indx[j]]
@@ -163,22 +190,3 @@ baseDensity_200 <- f_est_fn(out200)
 baseDensity_500 <- f_est_fn(out500)
 
 
-# Comparing F_0 with truths
-
-plot(yGrid, F0_true, type = 'l', col = 'black', lwd = 1, ylim = c(0, 1))
-lines(yGrid, rowMeans(baseDensity_100$F0_est), col = 'red', lwd = 1)
-lines(yGrid, rowMeans(baseDensity_200$F0_est), col = 'red', lwd = 1)
-lines(yGrid, rowMeans(baseDensity_500$F0_est), col = 'green', lwd = 1)
-
-# Total Variation distance
-total_variation_distance <- function(f1, f2) {
-  differences <- abs(f1 - f2)
-  return(sum(differences) / 2)
-}
-
-# Comparing F_0 with truth using Total Variation distance
-TV_100 <- total_variation_distance(rowMeans(baseDensity_50$F0_est) %>% as.vector(), F0_true)
-TV_200 <- total_variation_distance(rowMeans(baseDensity_100$F0_est)%>% as.vector(), F0_true)
-TV_500 <- total_variation_distance(rowMeans(baseDensity_500$F0_est) %>% as.vector(), F0_true)
-
-c(TV_100, TV_200, TV_500)
