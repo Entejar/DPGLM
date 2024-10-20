@@ -1,4 +1,4 @@
-dpglm <- function(y, X, iter, tuning.params){
+dpglm <- function(y, X, iter, tuning.params, set.beta = TRUE){
   
   # Link Function -----------------------------------------------------------------------
   link <- 'logit'
@@ -29,13 +29,12 @@ dpglm <- function(y, X, iter, tuning.params){
   z_samples <- matrix(NA, nrow = iter, ncol = n)
   crm_samples   <- list()
   init <- gldrm(y ~ X[, -1], link = link)
-  # beta0 <- log(mu0 / (1 - mu0))   
-  # if(floor(n / p) < 100){ 
-  #   beta <- beta_samples[1,] <- c(beta0, rep(0, p - 1))
-  # } else{
-  #   beta <- beta_samples[1,] <- c(beta0, init$beta[2:p] %>% as.numeric())
-  # }
-  beta_samples[1, ] <- beta <- init$beta %>% as.numeric()
+  beta0 <- log(mu0 / (1 - mu0))  
+  if(set.beta == TRUE){
+    beta_samples[1, ] <- beta <- c(beta0, rep(0, p-1))
+  } else {
+    beta_samples[1, ] <- beta <- init$beta %>% as.numeric()
+  }
   z.tld <- spt <- init$spt
   J.tld <- Jstar <- init$f0
   crm_samples[[1]] <- list(z.tld = spt, J.tld = Jstar)

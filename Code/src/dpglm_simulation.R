@@ -1,4 +1,4 @@
-
+`
 # Loading -----------
 
 source("load.R")
@@ -34,6 +34,8 @@ dat   <- data.frame(y = dens$x, f0 = dens$y)
 indx  <- dat$y >= 0 & dat$y <= 1
 true_spt <- dat$y[indx]
 true_f0    <- dat$f0[indx]
+f0_true_kde <- data.frame(spt = true_spt, f0 = true_f0)
+saveRDS(f0_true_kde, "data/f0_true_kde.rds")
 true_mu0 <- sum(true_spt * true_f0) / sum(true_f0)
 
 # Beta(a, b) Fit
@@ -41,6 +43,9 @@ betafit <- MASS::fitdistr(hustadTDMW$mean_intelligibility, dbeta, start = list(s
 a <- betafit$estimate[1]
 b <- betafit$estimate[2]
 f00 <- dbeta(true_spt, shape1 = a, shape2 = b)
+f0_true_beta <- data.frame(spt = true_spt, f0 = f00)
+saveRDS(f0_true_beta, "data/f0_true_beta.rds")
+
 
 # Simulation: Setting I
 
@@ -91,7 +96,7 @@ sim_III <- function(n, link) {
   Y     <- sapply(1:n, function(i) {
     sample(true_spt, 1, prob = fY[i, ])
   })
-  return(data.frame(Y, X) %>% arrange(Y))
+  return(data.frame(Y, X) %>% arrange(Y)) # ATTENTION: data frame is sorted by Y
 }
 
 # Unit Testing
@@ -103,7 +108,7 @@ M <- 20
 alpha <- 1
 G0.dist <- 6
 delta <- 2
-kdist <- 6                             # ATTENTION: Choose K as 6 or 7?
+kdist <- 6                                # ATTENTION: Choose K as 6 or 7?
 sigma_theta <- 0.001
 a00 <- 0
 b00 <- 1
@@ -127,27 +132,37 @@ X <- dat[, -1] %>% as.matrix()
 
 gldrm_fit <- gldrm(y ~ X[, -1], link = 'logit')
 gldrm_fit
+set.beta <- TRUE
+out100 <- dpglm(
+  y = y[1:100],
+  X = X[1:100, ],
+  iter = 10,
+  tuning.params = tuning.params,
+  set.beta = set.beta
+)
 
-out25 <- dpglm(y = y[1:25], 
-                X = X[1:25,], 
-                iter = 1000, 
-                tuning.params = tuning.params)
 
-out100 <- dpglm(y = y[1:100], 
-                X = X[1:100,], 
-                iter = 1000, 
-                tuning.params = tuning.params)
+out200 <- dpglm(
+  y = y[1:200],
+  X = X[1:200, ],
+  iter = 1000,
+  tuning.params = tuning.params,
+  set.beta = set.beta
+)
 
-out400 <- dpglm(y = y, 
-                X = X, 
-                iter = 1000, 
-                tuning.params = tuning.params)
+out400 <- dpglm(
+  y = y,
+  X = X,
+  iter = 1000,
+  tuning.params = tuning.params,
+  set.beta = set.beta
+)
 
 burn <- 500
 save <- seq(burn+1, 1000, 10)
 
-sqrt(mean(out25$z[save, ] - y[1:25])^2)
 sqrt(mean(out100$z[save, ] - y[1:100])^2)
+sqrt(mean(out200$z[save, ] - y[1:200])^2)
 sqrt(mean(out400$z[save, ] - y[1:400])^2)
 
 true_beta <- c(-0.7, 0.2, -0.1)
@@ -161,20 +176,20 @@ beta_summary <- function(out) {
               beta_est_err = beta_est_err))
 }
 
-beta_summary(out25)
 beta_summary(out100)
+beta_summary(out200)
 beta_summary(out400)
 
-plot(abs(out25$beta[-(1:burn), 1] - true_beta[1]), type = 'l')
 plot(abs(out100$beta[-(1:burn), 1] - true_beta[1]), type = 'l')
+plot(abs(out200$beta[-(1:burn), 1] - true_beta[1]), type = 'l')
 plot(abs(out400$beta[-(1:burn), 1] - true_beta[1]), type = 'l')
 
-plot(abs(out25$beta[-(1:burn), 2] - true_beta[2]), type = 'l')
 plot(abs(out100$beta[-(1:burn), 2] - true_beta[2]), type = 'l')
+plot(abs(out200$beta[-(1:burn), 2] - true_beta[2]), type = 'l')
 plot(abs(out400$beta[-(1:burn), 2] - true_beta[2]), type = 'l')
 
-plot(abs(out25$beta[-(1:burn), 3] - true_beta[3]), type = 'l')
 plot(abs(out100$beta[-(1:burn), 3] - true_beta[3]), type = 'l')
+plot(abs(out200$beta[-(1:burn), 3] - true_beta[3]), type = 'l')
 plot(abs(out400$beta[-(1:burn), 3] - true_beta[3]), type = 'l')
 
 ## Relevant for testing null case i.e., theta = 0 or constant (theta0) over x
@@ -219,7 +234,7 @@ for (i in 1:length(yGrid)) {
 
 c0 <- 0.025
 
-save <- seq(burn+1, 1000, 12)
+
 f_est_fn <- function(out) {
   itr_indx <- save
   F0_est <- f0_est <- matrix(0, nrow = length(yGrid), ncol = length(itr_indx))
@@ -242,8 +257,8 @@ f_est_fn <- function(out) {
   return(list(F0_est = F0_est, f0_est = f0_est))
 }
 
-baseDensity_25 <- f_est_fn(out25)
 baseDensity_100 <- f_est_fn(out100)
+baseDensity_200 <- f_est_fn(out200)
 baseDensity_400 <- f_est_fn(out400)
 
 # Comparing F_0 with truths
@@ -252,8 +267,9 @@ lines(yGrid, rowMeans(baseDensity_100$F0_est), col = 'red', lwd = 1)
 lines(yGrid, rowMeans(baseDensity_400$F0_est), col = 'green', lwd = 1)
 
 F0_df <- data.frame(y = yGrid,
-                   F0 = c(F0_true, rowMeans(baseDensity_100$F0_est), rowMeans(baseDensity_400$F0_est)),
-                   n = rep(c('True', '100', '400'), each = length(yGrid)))
+                   F0 = c(F0_true, rowMeans(baseDensity_100$F0_est), rowMeans(baseDensity_200$F0_est),
+                          rowMeans(baseDensity_400$F0_est)),
+                   n = rep(c('True', '100', '200', '400'), each = length(yGrid)))
 
 ggplot(F0_df, aes(x = y, y = F0, color = n)) +
   geom_line() +
@@ -261,9 +277,10 @@ ggplot(F0_df, aes(x = y, y = F0, color = n)) +
 
 # KS Test stat comparison
 
-ks100 <- ks.test(rowMeans(baseDensity_100$F0_est), F0_true)
-ks400 <- ks.test(rowMeans(baseDensity_400$F0_est), F0_true)
-c(ks100$statistic, ks400$statistic)  # KS Test Statistic
+ks100 <- ks.test(rowMeans(baseDensity_100$F0_est), F0_true, alternative = 'two.sided', simulate.p.value = TRUE)
+ks200 <- ks.test(rowMeans(baseDensity_200$F0_est), F0_true, alternative = 'two.sided', simulate.p.value = TRUE)
+ks400 <- ks.test(rowMeans(baseDensity_400$F0_est), F0_true, alternative = 'two.sided', simulate.p.value = TRUE)
+c(ks100$statistic, ks200$statistic, ks400$statistic)  # KS Test Statistic
 
 # # Parallel Loop
 # num_datasets <- 1
