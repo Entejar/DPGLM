@@ -41,8 +41,8 @@ dirichlet_process_mixture_sampler <- function(data, n_iter, alpha, mu0, sigma02,
     .Call(`_DPGLM_dirichlet_process_mixture_sampler`, data, n_iter, alpha, mu0, sigma02, a, b, a0, b0, c0, d0, e0, f0, max_clusters)
 }
 
-b_theta <- function(s_k, f_k, theta_i) {
-    .Call(`_DPGLM_b_theta`, s_k, f_k, theta_i)
+b_theta <- function(s_k, f_k, theta) {
+    .Call(`_DPGLM_b_theta`, s_k, f_k, theta)
 }
 
 b_prime_theta <- function(s_k, f_k, theta_i) {
@@ -59,6 +59,10 @@ llik_beta <- function(y, x, theta, crm, c_0, B, sigma_theta) {
 
 crm_sampler <- function(M, u, zstar, nstar, tht, alpha, mu, y, z_tld, J_tld) {
     .Call(`_DPGLM_crm_sampler`, M, u, zstar, nstar, tht, alpha, mu, y, z_tld, J_tld)
+}
+
+logit <- function(x) {
+    .Call(`_DPGLM_logit`, x)
 }
 
 expit <- function(x) {

@@ -106,12 +106,8 @@ dat <- sim_III(n, link = 'logit')
 rho  <- 1
 M <- 20
 alpha <- 1
-G0.dist <- 6
-delta <- 2
-kdist <- 6                                # ATTENTION: Choose K as 6 or 7?
+delta <- 2                               # ATTENTION: Choose K as 6 or 7?
 sigma_theta <- 0.001
-a00 <- 0
-b00 <- 1
 c0 <- 0.025
 beta.sigma <- 1
 

@@ -8,7 +8,7 @@ require(doParallel)
 source("load.R")
 
 # Parallel Setup ----------------------------------------------------------------
-num_cores <- 6
+num_cores <- 4
 cl        <- makeCluster(num_cores)
 registerDoParallel(cl)
 
@@ -63,23 +63,20 @@ sim_II <- function(n, p0, p1) {
 
 
 # ***************** Parallel Loop ********************************************* #
-n_datasets <- 20
-n_settings <- 2
+n_datasets <- 50
+n_settings <- 2                           # ATTENTION: DO NOT CHANGE THIS VALUE!
 n_tot <- n_datasets * n_settings
+n_iter <- 1000
 out_list <- list()
-start_time <- Sys.time()
 seed_init <-  sample.int(.Machine$integer.max, 1)
 n <- 400
-set.beta <- TRUE
+set.beta <- FALSE                         # ATTENTION: By default, set.beta = FALSE . Change to TRUE?
 rho  <- 1
 M <- 20
 alpha <- 1
-G0.dist <- 6
-delta <- 2
-kdist <- 6                                # ATTENTION: Choose K as 6 or 7?
+delta <- 2                                # ATTENTION: K and G are fixed as unif(z-c0, z+c0) and unif(0,1) respectively. For other 
+                                          # choices, see settings 1,2,4 in `implementation notes` in Rmarkdown folder.
 sigma_theta <- 0.001
-a00 <- 0
-b00 <- 1
 c0 <- 0.025
 beta.sigma <- 1
 
@@ -87,16 +84,13 @@ tuning.params <- list(
   rho = rho,
   M = M,
   alpha = alpha,
-  G0.dist = G0.dist,
   delta = delta,
-  k.dist = kdist,
   sigma_theta = sigma_theta,
-  a00 = a00,
-  b00 = b00,
   c0 = c0,
   beta.sigma = beta.sigma
 )
 
+start_time <- Sys.time()
 
 out_list <- foreach(
   indx = 1:n_tot,
@@ -114,7 +108,7 @@ out_list <- foreach(
   out100 <- dpglm(
     y = y[1:100],
     X = X[1:100, ],
-    iter = 2000,
+    iter = n_iter,
     tuning.params = tuning.params,
     set.beta = set.beta
   )
@@ -122,7 +116,7 @@ out_list <- foreach(
   out200 <- dpglm(
     y = y[1:200],
     X = X[1:200, ],
-    iter = 2000,
+    iter = n_iter,
     tuning.params = tuning.params,
     set.beta = set.beta
   )
@@ -130,18 +124,18 @@ out_list <- foreach(
   out400 <- dpglm(
     y = y,
     X = X,
-    iter = 2000,
+    iter = n_iter,
     tuning.params = tuning.params,
     set.beta = set.beta
   )
   
-  out <- list(out100, out200, out400)
+  out <- list(mcmc_samples = list(MS1 = out100, MS2 = out200, MS3 = out400), data = dat)
   return(out)
 }
 
 Sys.time() - start_time
 
-# Stop parallel backend
+# Stop parallel backend --------------------------------------------------------
 stopCluster(cl)
 
 # Save result ------------------------------------------------------------------

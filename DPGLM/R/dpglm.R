@@ -7,12 +7,8 @@ dpglm <- function(y, X, iter, tuning.params, set.beta = TRUE){
   rho <- tuning.params$rho
   M <- tuning.params$M
   alpha <- tuning.params$alpha
-  G0.dist <- tuning.params$G0.dist
   delta <- tuning.params$delta
-  K.dist <- tuning.params$K.dist
   sigma_theta <- tuning.params$sigma_theta
-  a00 <- tuning.params$a00
-  b00 <- tuning.params$b00
   c0 <- tuning.params$c0
   beta.sigma <- tuning.params$beta.sigma
 
