@@ -8,7 +8,7 @@ require(doParallel)
 source("load.R")
 
 # Parallel Setup ----------------------------------------------------------------
-num_cores <- 4
+num_cores <- 6
 cl        <- makeCluster(num_cores)
 registerDoParallel(cl)
 
@@ -63,13 +63,13 @@ sim_II <- function(n, p0, p1) {
 
 
 # ***************** Parallel Loop ********************************************* #
-n_datasets <- 50
+n_datasets <- 10
 n_settings <- 2                           # ATTENTION: DO NOT CHANGE THIS VALUE!
 n_tot <- n_datasets * n_settings
-n_iter <- 1000
+n_iter <- 500
 out_list <- list()
 seed_init <-  sample.int(.Machine$integer.max, 1)
-n <- 400
+n <- 400                                  # Make sure n is divisible by 4
 set.beta <- FALSE                         # ATTENTION: By default, set.beta = FALSE . Change to TRUE?
 rho  <- 1
 M <- 20
@@ -95,7 +95,8 @@ start_time <- Sys.time()
 out_list <- foreach(
   indx = 1:n_tot,
   .packages = c("gldrm", "tidyverse", "mvtnorm", "DPGLM")
-) %do% {
+) %dopar% {
+  tryCatch({
   seed_val <- seed_init + indx
   if (indx <= (n_tot / 2)) {
     dat <- sim_I(n)
@@ -106,16 +107,16 @@ out_list <- foreach(
   X <- dat[, -1] %>% as.matrix()
   
   out100 <- dpglm(
-    y = y[1:100],
-    X = X[1:100, ],
+    y = y[1:(n/4)],
+    X = X[1:(n/4), ],
     iter = n_iter,
     tuning.params = tuning.params,
     set.beta = set.beta
   )
   
   out200 <- dpglm(
-    y = y[1:200],
-    X = X[1:200, ],
+    y = y[1:(n/2)],
+    X = X[1:(n/2), ],
     iter = n_iter,
     tuning.params = tuning.params,
     set.beta = set.beta
@@ -131,15 +132,18 @@ out_list <- foreach(
   
   out <- list(mcmc_samples = list(MS1 = out100, MS2 = out200, MS3 = out400), data = dat)
   return(out)
+}, error = function(e) {
+  return(list(error = TRUE, message = as.character(e)))
+})
 }
 
-Sys.time() - start_time
+time_tot <- Sys.time() - start_time
 
 # Stop parallel backend --------------------------------------------------------
 stopCluster(cl)
 
 # Save result ------------------------------------------------------------------
-saveRDS(out_list, file = "oct_20_null_cases_sim.rds")
+saveRDS(out_list, file = "cache/oct_24_null_cases_sim_10_replicates_run2.rds")
 
 
 

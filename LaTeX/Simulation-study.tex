@@ -1,0 +1,145 @@
+\documentclass[10pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{ulem}
+\usepackage{cancel}
+\usepackage{amsthm} % for theorem environments
+%SetFonts
+
+%SetFonts
+\newcommand{\Q}[1]{\textcolor{brown}{[Q: \textcolor{teal}{#1}]}}
+\newcommand{\citea}[1]{\citeauthor{#1}, \href{cite.#1}{\textcolor{blue}{\citeyear{#1}}}}
+\newcommand{\citeb}[1]{\citeauthor{#1} (\href{cite.#1}{\textcolor{blue}{\citeyear{#1}}})}
+\newcommand{\citec}[2]{(\href{cite.#1}{\citeauthor{#1}}, \href{cite.#1}{\textcolor{blue} {\citeyear{#1}}}; \href{cite.#2}{\citeauthor{#2}}, \href{cite.#2}{\textcolor{blue} {\citeyear{#2}}})}
+
+\newcommand{\todo}[1]{\textcolor{red}{[To Do: \textcolor{teal}{#1}]}}
+\newcommand{\refa}[1]{\textcolor{blue}{\ref{#1}}}
+
+
+
+\newcommand{\Ga}{\mbox{Ga}}
+\renewcommand{\th}{\theta}
+\newcommand{\cb}{\bm{c}}
+\renewcommand{\sb}{\bm{s}}
+\newcommand{\vb}{\bm{v}}
+\newcommand{\wb}{\bm{w}}
+\newcommand{\bx}{\mbox{\boldmath $x$}}
+\newcommand{\beps}{\mbox{\boldmath $\epsilon$}}
+\newcommand{\estimates}{\mathrel{\widehat{=}}}
+\newcommand{\thh}{\widetilde{H}}
+\newcommand{\scf}{\mathcal{F}}
+\newcommand{\sx}{\mathcal{X}}
+\newcommand{\sy}{\mathcal{Y}}
+\newcommand{\bth}{\mbox{\boldmath $\theta$}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\renewcommand{\scf}{\mathcal{F}}
+\renewcommand{\sx}{\mathcal{X}}
+\renewcommand{\sy}{\mathcal{Y}}
+\newcommand{\syy}{\mathbb{\sy}}
+\newcommand{\sbb}{\mathcal{B}}
+\newcommand{\sd}{\mathcal{D}}
+\newcommand{\eps}{\epsilon}
+\newcommand{\pr}{\mbox{Pr}}
+\newcommand{\ub}{\mathbf{u}}
+\newcommand{\tn}{{\widetilde n}}
+\newcommand{\tmu}{\widetilde{\mu}}
+
+\newcommand{\red}{\color{red}}
+\newcommand{\blu}{\color{blue}}
+\newcommand{\bla}{\color{black}}
+\newcommand{\bch}{\blau\it}
+\newcommand{\ech}{\schwarz\rm}
+\newcommand{\cut}{{\blau \bf [CUT] }}
+\newcommand{\mynote}[1]{\footnote{#1}}
+
+
+% Theorem styles
+\newtheorem{result}{Result}[section] % Numbered within each section
+\newtheorem{theorem}{Theorem}[section] % Numbered within each section
+\newtheorem{lemma}[theorem]{Lemma} % Numbered with theorems
+\newtheorem{corollary}[theorem]{Corollary} % Numbered with theorems
+
+% Proof environment
+\renewenvironment{proof}{\noindent \textit{Proof.}}
+
+\title{\bf DPGLM: Simulation Study}
+%\author{}
+\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+\section{DP-GLM}
+\begin{align}
+ y_i \mid  z_i, x_i & \sim K(y_i \mid z_i, x_i) = K(y_i \mid z_i), \quad y_i, z_i \in \sy \\
+z_i \mid x_i = x, \widetilde \theta_{x}, \tmu & \sim p_x(z_i) \propto
+                                       \exp(\widetilde \th_{x} z_i) \widetilde
+                                       \mu(z_i) \\ 
+\widetilde \theta_x \mid \theta_x & \sim p(\widetilde \theta_x \mid \theta_x), \text{ with } b^\prime(\theta_x) = \int_\sy z \frac{\exp( \th_{x} z) \widetilde
+                                       \mu(z)}{\int_\sy \exp(\th_{x} u ) \widetilde
+                                       \mu(u) du} dz = g^{-1}(x^\prime \beta)  \\ 
+\tmu & \sim \text{ gamma CRM}(\nu), \text{ with } \nu(dw, dm) =  \alpha \frac{e^{-w}}{w} dw \cdot G_0(dm) \\ 
+\beta & \sim \text{ MVN}(\mu_\beta, \Sigma_\beta). 
+\label{dpglm}
+\end{align}
+
+\subsection{Modeling fractional data}
+Here $\sy = [0, 1]$.
+\subsubsection{Hyper-and-tuning parameters}
+\begin{itemize}
+    \item $K(\cdot \mid z_i)  = \text{ Uniform}(z_i - c_0, z_i + c_0)$. We use $c_0 = 0.025$
+    \item We truncate the CRM at $M = 20$, where the CRM is given by $\tmu(\cdot) = \alpha \sum_{h = 1}^M w_h \delta_{m_h}(\cdot)$. So, all we need to do is to put priors on $w_h$ and $m_h$. We take $m_h \sim G_0 = \text{ Uniform}(0, 1)$ and $w_h \sim \text{improper gamma dist with intensity } \rho(dw) = \alpha \frac{e^{-w}}{w}dw$, and the corresponding NRM prior: $\tmu_{nrm}(\cdot) = \alpha \sum_{h = 1}^M w^{normed}_{h} \delta_{m_h}(\cdot)$, with $w^{normed}_{h} \sim \text{ Beta}(1, \alpha)$. We take $\alpha = 1$.
+    \item $g(\mu) = \ln(\frac{\mu}{1 - \mu})$ [logit link]
+    \item We take $\mu_\beta = 0$ and $\Sigma_\beta = \sigma^2_\beta I_p$. We set $\sigma^2_\beta = 1$.
+\end{itemize}
+
+\subsubsection{How to get pdf and cdf?}
+\label{sec:pdf-cdf}
+The kernel $K(y \mid z) = \text{ Uniform}(y; \ z - c_0, z + c_0), \ y \in [0, 1]$. The density of $y$ given $x$ is given by,
+$$f(y \mid x) = \int_z K(y \mid z, x) p(z \mid x, \theta_{x}, \tilde \mu) dz = \sum_{\ell} \frac{1}{2c_0} 1_{\{z_\ell - c_0 , z_\ell + c_0\}}(y) \frac{\exp(\theta_x z_\ell) J_\ell}{\sum_{\ell'}\exp(\theta_x z_{\ell'}) J_{\ell'}}
+$$. Let's call 
+$\frac{\exp(\theta_x z_\ell) J_\ell}{\sum_{\ell'}\exp(\theta_x z_{\ell'}) J_{\ell'}} = \pi_{\ell}(\theta_x)
+$. So, $$f(y \mid x) = \sum_{\ell} \pi_{\ell}(\theta_x) \frac{1}{2c_0} 1_{\{z_\ell - c_0 , z_\ell + c_0\}}(y).$$ From here, we get $f_0(y)$ by replacing $\theta_x = 0$. Similarly, the CDF is given by, 
+$$F(y \mid x) = \int_{0}^{y} f(y' \mid x) dy' = \sum_{\ell} \pi_\ell(\theta_x) \left[\left(\frac{y - z_\ell + c_0}{2c_0}\right) 1_{\{z_\ell - c_0,  z_\ell + c_0\}}(y) + \left(\frac{2c_0}{2c_0}\right) 1_{\{z_\ell + c_0 < y\}}(y) + 0 \cdot 1_{y < z_\ell - c_0}(y) \right].$$ From here, we similarly get $F_0(y)$ by replacing $\theta_x = 0$. \color{red} IMPORTANT!! \color{black} should we tilt $f_0$ to have mean $\mu_0$? Then, should we do it for both --- truth and estimates, when performing comparisons in simulation study? 
+
+\section{Simulation Studies}
+\label{sec:sim}
+We proceed with simulation studies to evaluate the frequentist operating characteristics of the DP-GLM model. Our investigation addresses the following key questions: 
+\begin{enumerate}
+\item[(Q1)] How does the model perform in terms of predictive accuracy when estimating the baseline density, $f_{\tmu}(y)$, under various scenarios? 
+\item[(Q2)] Do the credible intervals for $f_{\tmu}(y)$ achieve coverage rates close to their nominal levels? 
+\item[(Q3)] In scenarios where the response is independent of predictors, does $\theta_{x; n} := [\theta_x \mid \mathcal{D}_n]$ converge in probability to a constant (in $x$), or alternatively, do the credible intervals for $\theta_x$ attain nominal coverage rates? 
+\item[(Q4)] Do the credible intervals for $\beta_j$ parameters attain nominal coverage? How is their predictive accuracy?
+\end{enumerate}
+
+We consider a data generating mechanism where the response $y$ is sampled from the Speech Intelligibility dataset.
+
+
+
+\section{Simulation Setting I: Null Case}
+Let $f^{(kde)}_{\tmu}$ denote the kernel density estimate based on the response data from Speech Intelligibility dataset (ignoring the covariates). We consider $f^{(kde)}_{\tmu}$ as the simulation truth for the baseline density $f_{\tmu}$. Covariates are generated as: $x_{0i} = 1, x_{1i} \sim \text{Normal}(\mu_1, \sigma_1), x_{2i} \sim \text{Normal}(\mu_2, \sigma_2)$, where we take $\mu_1 = 1, \sigma_1 = 0.5, \mu_2 = 2, \sigma_2 = 1$. We sample $y$ independent of $x$ i.e, $y_i \sim f^{(kde)}_{\tmu}$. We use $\mathcal{D}_n$ to refer the observed data $\{x_i, y_i\}_{i=1}^n$. This setting aims to address Q1$-$Q3.  
+
+\subsection{Analysis}
+We get $f_0$ and its cdf $F_0$ by replacing $\theta_x = 0$ in the expressions in Section \refa{sec:pdf-cdf}. Similarly we get the estimates.
+
+
+\section{Simulation Setting II: Point masses} 
+Let $f^{(Beta)}_{\tmu}$ denote the $\text{Beta}(a,b)$ density estimate based on the response data from Speech Intelligibility dataset (ignoring the covariates). We consider $f^{(Beta)}_{\tmu}$ as the simulation truth for $f_{\tmu}$, with additional point masses $p_0$ and $p_1$ respectively at $y = 0$ and $y = 1$. We take $p_0 = 0.1$ and $p_1 = 0.4$. The rest is same as in Setting I. Apart from Q1$-$Q3, the primary objective here is to assess whether the model accurately estimates the point masses. 
+
+\subsection{Analysis}
+We get $f_0$ and its cdf $F_0$ as follows --- by replacing $\theta_x = 0$ in the expressions in Section \refa{sec:pdf-cdf} for $y \in (0,1)$, and let's call it $F^\star_0(y)$. Then, our cdf would be: $F_0(0) = p_0$ and $F_0(y) = p_0 + (1 - p_0 - p_1) \cdot F^\star_0(y), \ y \in (0,1)$, and $F_0(1) = 1$. Similarly we get the estimates.
+
+
+\section{Simulation Setting III: Regression} 
+We consider the same framework as in Setting I, with one modification: the sampling $y$ is now dependent on $x = (x_1, x_2)$. Specifically, we sample $y_i \sim p(y_i \mid x_i) \propto \exp(\theta_{x_i} y_i)f^{(kde)}_{\tmu}(y_i)$, where $\theta_x \sim \text{Normal}(\widetilde \theta_x, \sigma^2_\theta)$, with $\sigma_\theta = 0.001$. Here, $\widetilde \theta_x = {b^\prime}^{-1}(g^{-1}(\eta_x))$, with $\eta_x = \beta_0 + x^T\beta$. We set $\beta_0 = -0.7, \beta^T = (0.2, -0.1)$. This setting aims to address Q1, Q2 and Q4.
+
+\end{document}
