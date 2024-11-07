@@ -23,14 +23,25 @@ mu0 <- sum(spt * f0_kde) / sum(f0_kde)
 
 sim_I <- function(n) {
   X     <- cbind(1, matrix(c(rnorm(n, 1, 0.5), rnorm(n, 2, 1)), ncol = 2))
+  beta <- c(1, 0, 0)
+  mu <- as.numeric(expit(X %*% beta))
+  out <- theta_sol(spt, f0_kde, mu, NULL)
+  theta <- out$theta
+  btheta <- out$btht
   X       <- X %>% as.matrix()
-  btheta <- theta <- rep(0, n)
   fY <- t(sapply(1:n, function(i) {
-    f0_kde
+    exp(theta[i] * spt - btheta[i]) * f0_kde
   }))
   Y     <- sapply(1:n, function(i) {
     sample(spt, 1, prob = fY[i, ])
   })
+  # btheta <- theta <- rep(0, n)
+  # fY <- t(sapply(1:n, function(i) {
+  #   f0_kde
+  # }))
+  # Y     <- sapply(1:n, function(i) {
+  #   sample(spt, 1, prob = fY[i, ])
+  # })
   return(data.frame(Y, X) %>% arrange(Y))
 }
 

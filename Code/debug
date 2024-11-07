@@ -1,0 +1,3 @@
+# For [n = 200]: very few locations (z) > 0.85 (prob = 0.03), but for [n = 400]: lot of obs > 0.85 (prob = 0.38). Why this diff?
+# In dpglm.R: change diagnostic from tracking beta's to tracking locations (z), maybe do a histogram [see earlier SMI code]
+# [sim]: use simulation truth to see if the problem persists, then there is probably a bug. Otherwise it's just non-asymptotia playing for N = 200 as \beta and f_0 are orthogonal in asymptotic sense, so MC is stuck in some local mode. With N = 400, the MC is able to escape this local mode, and maybe starting close to the truth. So, use simulation truths for both of them to escape the mixing issue.
