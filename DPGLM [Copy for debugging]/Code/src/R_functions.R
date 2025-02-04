@@ -202,3 +202,56 @@ resample_zstar <- function(z){
   return(list(zstar = zstar, nstar = nstar))
 }
 
+log_posterior_u <- function(u, z, theta, alpha) {
+  R <- 250
+  eps <- 1e-6
+  zstar <- c(seq(0 + eps, 1 - eps, length.out = R), z)
+  
+  exp_mat <- exp(outer(theta, zstar, "*"))  
+  u_exp_mat <- u * exp_mat 
+  
+  log_1_plus_u_exp_mat_sum <- log(1 + colSums(u_exp_mat))  
+  neg_log_post <- alpha * mean(log_1_plus_u_exp_mat_sum[1:R]) + 
+    mean(log_1_plus_u_exp_mat_sum[(R + 1):length(log_1_plus_u_exp_mat_sum)])
+  
+  return(-neg_log_post)
+}
+
+logpdf_gamma <- function(x, shape, scale) {
+  (shape - 1) * log(x) - x / scale - shape * log(scale) - lgamma(shape)
+}
+
+update_u <- function(u, z, theta, alpha, delta) {
+  for (i in seq_along(u)) {
+    u_star <- u
+    u_star[i] <- rgamma(1, shape = delta, scale = u[i] / delta)
+    
+    logQ_ratio <- logpdf_gamma(u[i], delta, u_star[i] / delta) - 
+      logpdf_gamma(u_star[i], delta, u[i] / delta)
+    
+    logratio <- log_posterior_u(u_star, z, theta, alpha) - 
+      log_posterior_u(u, z, theta, alpha) + logQ_ratio
+    
+    if (log(runif(1)) < logratio) {
+      u <- u_star
+    }
+  }
+  return(u)
+}
+
+# update_u <- function(u, z, theta, alpha){
+#   u_grid <- seq(0, 10, 0.1)
+#   for(i in 1:length(u)){
+#     ustar <- u
+#     logprob <- numeric(length(u_grid))
+#     for(j in 1:length(u_grid)){
+#     ustar[i] <- u_grid[j]
+#     logprob[j] <-  log_posterior_u(ustar, z, theta, alpha)
+#     }
+#     prob <- exp(logprob - max(logprob))
+#     u[i] <- sample(u_grid, 1, prob = prob)
+#   }
+#   return(u)
+# }
+
+
