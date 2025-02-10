@@ -202,43 +202,6 @@ resample_zstar <- function(z){
   return(list(zstar = zstar, nstar = nstar))
 }
 
-log_posterior_u <- function(u, z, theta, alpha) {
-  R <- 250
-  eps <- 1e-6
-  zstar <- c(seq(0 + eps, 1 - eps, length.out = R), z)
-  
-  exp_mat <- exp(outer(theta, zstar, "*"))  
-  u_exp_mat <- u * exp_mat 
-  
-  log_1_plus_u_exp_mat_sum <- log(1 + colSums(u_exp_mat))  
-  neg_log_post <- alpha * mean(log_1_plus_u_exp_mat_sum[1:R]) + 
-    mean(log_1_plus_u_exp_mat_sum[(R + 1):length(log_1_plus_u_exp_mat_sum)])
-  
-  return(-neg_log_post)
-}
-
-logpdf_gamma <- function(x, shape, scale) {
-  (shape - 1) * log(x) - x / scale - shape * log(scale) - lgamma(shape)
-}
-
-update_u <- function(u, z, theta, alpha, delta) {
-  for (i in seq_along(u)) {
-    u_star <- u
-    u_star[i] <- rgamma(1, shape = delta, scale = u[i] / delta)
-    
-    logQ_ratio <- logpdf_gamma(u[i], delta, u_star[i] / delta) - 
-      logpdf_gamma(u_star[i], delta, u[i] / delta)
-    
-    logratio <- log_posterior_u(u_star, z, theta, alpha) - 
-      log_posterior_u(u, z, theta, alpha) + logQ_ratio
-    
-    if (log(runif(1)) < logratio) {
-      u <- u_star
-    }
-  }
-  return(u)
-}
-
 # update_u <- function(u, z, theta, alpha){
 #   u_grid <- seq(0, 10, 0.1)
 #   for(i in 1:length(u)){
@@ -254,4 +217,141 @@ update_u <- function(u, z, theta, alpha, delta) {
 #   return(u)
 # }
 
+logpost_beta <- function(beta, z, X, atoms, jumps, mu_beta, sigma_beta){
+  n <- length(z)
+  mu <- exp(X %*% beta) / (1 + exp(X %*% beta))
+  theta <- gldrm:::getTheta(spt = atoms, f0 = jumps, mu = mu, 
+                                  ySptIndex = NULL, sampprobs = NULL)$theta
+  btheta <- b_theta(theta, atoms, jumps)
+  log_post <- sum(theta * z - btheta) - sum((beta - mu_beta)^2) / (2 * sigma_beta^2) # others const in beta
+  return(log_post)
+}
 
+loglik <- function(z, X, beta, atoms, jumps){
+  n <- length(z)
+  mu <- exp(X %*% beta) / (1 + exp(X %*% beta))
+  theta <- gldrm:::getTheta(spt = atoms, f0 = jumps, mu = mu, ySptIndex = NULL, 
+                            sampprobs = NULL)$theta
+  btheta <- apply(exp(outer(theta, atoms, "*")), 1, function(j) log(sum(j * jumps)))
+  f0_z <- numeric(n)
+  for (i in 1:n) {
+    f0_z[i] <- sum(jumps[z[i] == atoms])
+  }
+  loglik <- sum(theta * z - btheta + log(f0_z))
+  return(loglik)
+}
+
+log_post_u <- function(u, z, theta, alpha) {
+  R <- 250
+  eps <- 1e-6
+  
+  # Construct zstar: concatenate linspace from (eps, 1-eps) with z
+  zstar <- c(seq(eps, 1 - eps, length.out = R), z)
+  
+  # Create the exp_mat: equivalent to exp(diagmat(theta) * repmat(zstar, 1, length(theta)).t())
+  exp_mat <- exp(outer(theta, zstar, `*`)) # Outer product with element-wise multiplication
+  
+  # Calculate u_exp_mat: equivalent to diagmat(u) * exp_mat
+  u_exp_mat <- u * exp_mat
+  
+  # Sum across columns, and take log(1 + ...)
+  log_1_plus_u_exp_mat_sum <- log(1 + colSums(u_exp_mat))
+  
+  # Compute the negative log posterior
+  neg_log_post <- alpha * mean(log_1_plus_u_exp_mat_sum[1:R]) +
+    sum(log_1_plus_u_exp_mat_sum[(R + 1):length(zstar)])
+  
+  return(-neg_log_post)
+}
+
+sampler_u <- function(u, z, theta, alpha, delta) {
+  n <- length(u) # Get the length of u
+  
+  for (i in seq_len(n)) {
+    u_star <- u
+    # Sample from Gamma distribution: shape = delta, scale = u[i] / delta
+    u_star[i] <- rgamma(1, shape = delta, scale = u[i] / delta)
+    
+    # Compute logQ_ratio: log(q(ui | ui_star)) - log(q(ui_star | ui))
+    logQ_ratio <- dgamma(u[i], shape = delta, scale = u_star[i] / delta, log = TRUE) - 
+      dgamma(u_star[i], shape = delta, scale = u[i] / delta, log = TRUE)
+    
+    # Compute logratio
+    logratio <- log_post_u(u_star, z, theta, alpha) - 
+      log_post_u(u, z, theta, alpha) + logQ_ratio
+    
+    # Metropolis-Hastings acceptance step
+    if (log(runif(1)) < logratio) {
+      u[i] <- u_star[i]
+    } # else, u[i] remains unchanged
+  }
+  
+  return(u)
+}
+
+sampler_u_ <- function(u, z, theta, alpha, delta) {
+  n <- length(u) # Get the length of u
+  u_star <- numeric(n)
+  logQ_ratio <- 0
+  for (i in seq_len(n)) {
+    # Sample from Gamma distribution: shape = delta, scale = u[i] / delta
+    u_star[i] <- rgamma(1, shape = delta, scale = u[i] / delta)
+    
+    # Compute logQ_ratio: log(q(ui | ui_star)) - log(q(ui_star | ui))
+    logQ_ratio <- logQ_ratio + dgamma(u[i], shape = delta, scale = u_star[i] / delta, log = TRUE) - 
+      dgamma(u_star[i], shape = delta, scale = u[i] / delta, log = TRUE)
+  }
+    
+    # Compute logratio
+    logratio <- log_post_u(u_star, z, theta, alpha) - 
+      log_post_u(u, z, theta, alpha) + logQ_ratio
+    
+    # Metropolis-Hastings acceptance step
+    if (log(runif(1)) < logratio) {
+      u <- u_star
+    } # else, u remains unchanged
+  
+  return(u)
+}
+
+
+loglikelihood <- function(y, X, beta, spt, f0, sampprobs = NULL) {
+  # Ensure valid inputs
+  spt <- as.vector(spt)
+  f0 <- as.vector(f0)
+  theta <- as.vector(theta)
+  sptN <- length(spt)
+  
+  if (length(f0) != sptN) stop("spt and f0 must be vectors of equal length.")
+  if (any(f0 < 0)) stop("f0 values cannot be negative.")
+  
+  # Map observations y to indices in spt
+  ySptIndex <- match(y, spt)
+  if (any(is.na(ySptIndex))) stop("Some values in y are not present in spt.")
+  
+  mu <- exp(X %*% beta) / (1 + exp(X %*% beta))
+  theta <- gldrm:::getTheta(spt = spt, f0 = f0, mu = mu, 
+                            ySptIndex = NULL, sampprobs = NULL)$theta
+  
+  # Compute unnormalized probabilities
+  fUnstd <- f0 * exp(tcrossprod(spt, theta))
+  
+  # Normalize probabilities
+  fTilt <- fUnstd / rep(colSums(fUnstd), each = sptN)
+  
+  # Adjust for sampling probabilities if provided
+  if (!is.null(sampprobs)) {
+    fTilt <- fTilt * t(sampprobs)
+    fTilt <- fTilt / rep(colSums(fTilt), each = nrow(fTilt))
+  }
+  
+  # Compute log-likelihood
+  llik <- sum(log(fTilt[cbind(ySptIndex, seq_along(ySptIndex))]))
+  
+  return(llik)
+}
+
+idx <- numeric(n)
+for (i in 1:n) {
+  idx[i] <- spt[round(y[i], 4) == round(spt, 4)]
+}

@@ -124,9 +124,7 @@ for(itr in 2:iter){
   # beta update -------------------------------------
   # beta <- beta_sampler_fractionalY(beta, Sig, theta, z.tld, J.tld, 
   #                                  mubetaprior, Sigbetaprior, sigma_theta) 
-  # Wrapper for log_post_beta function in R
   log_post_wrapper <- function(beta) {
-    # Call the C++ function, which returns the log posterior value for the given beta
     return(log_post_beta(beta, z.tld, J.tld, X, theta, sigma_theta, beta.sigma))
   }
   

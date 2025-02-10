@@ -240,13 +240,14 @@ double llik_beta_expK(const arma::vec& y, const arma::mat& x, const arma::vec& t
 
 //[[Rcpp::export]]
 double psi(double z, arma::vec u, arma::vec tht) {
-  double mx = arma::max(tht * z);
+  double mx = 0; // arma::max(tht * z);
   return arma::accu(u % arma::exp(tht * z - mx));
 }
 
 //[[Rcpp::export]]
 double psi_zstar(double zstar, arma::vec u, arma::vec tht) {
-  return arma::accu(u % arma::exp(tht * zstar));
+  double mx = 0; // arma::max(tht * zstar); 
+  return arma::accu(u % arma::exp(tht * zstar - mx));
 }
 
 
@@ -275,29 +276,21 @@ arma::vec stick_breaking_init(int K, double alpha) {
   return pi;
 }
 
-
 // [[Rcpp::export]]
-List crm_sampler_fractionalY(const int& M, const arma::vec& u, arma::vec zstar, 
-                             arma::vec nstar, arma::vec RL, 
-                             arma::vec RJ, const arma::vec& tht, const double& alpha, 
-                             const arma::vec& mu, const arma::vec& y,
-                             const float& shape1, const float& shape2) {
-  
-  int n = tht.n_elem;
+List update_crm(const int& M, const arma::vec& u, const arma::vec zstar, 
+                             arma::vec nstar, const arma::vec& theta, 
+                             const double& alpha) {
+  int n = theta.n_elem;
   int N = 3001;
   int R = 1000;
   double eps = 1e-6;
   arma::vec s = -arma::log(arma::linspace(exp(-1e-6), exp(-5e-4), N));
-  
-  // Sorted, ascending order, needed in RL
-  // arma::vec z = arma::sort(as<arma::vec>(Rcpp::runif(R, 0, 1))); // Centering dist: Uniform(0, 1)
-  // arma::vec z = arma::sort(as<arma::vec>(Rcpp::rbeta(R, shape1, shape2))); // Centering dist: Beta(shape1, shape2)
   arma::vec z = arma::linspace(eps, 1-eps, R);
   
   // Compute psi(z; u, tht)
   arma::vec psi_z(R);
   for (int i = 0; i < R; ++i) {
-    psi_z(i) = psi(z(i), u, tht);
+    psi_z(i) = psi(z(i), u, theta);
   }
   
   // First Part: random locations and jumps
@@ -313,7 +306,7 @@ List crm_sampler_fractionalY(const int& M, const arma::vec& u, arma::vec zstar,
   Nv *= alpha;
   
   arma::vec xi = arma::cumsum(as<arma::vec>(Rcpp::rexp(M, 1.0)));
-  // arma::vec RJ(M); // RJ = Random jumps, M = Finite truncation for CRM 
+  arma::vec RJ(M); // RJ = Random jumps, M = Finite truncation for CRM 
   int iNv = N - 1;
   
   for (int i = 0; i < M; ++i) {
@@ -322,8 +315,8 @@ List crm_sampler_fractionalY(const int& M, const arma::vec& u, arma::vec zstar,
     }
     RJ(i) = s(iNv + 1);
   }
-  
-  // arma::vec RL(M); // RL = Random locations
+
+  arma::vec RL(M); // RL = Random locations
   for (int m = 0; m < M; ++m) {
     double xi = arma::randu();
     arma::vec temp = arma::exp(-(1 + psi_z) * RJ(m));
@@ -334,7 +327,7 @@ List crm_sampler_fractionalY(const int& M, const arma::vec& u, arma::vec zstar,
   // Second Part: random jumps [for fixed locations]
   arma::vec psi_star(zstar.n_elem);
   for (int i = 0; i < zstar.n_elem; ++i) {
-    psi_star(i) = psi_zstar(zstar(i), u, tht);
+    psi_star(i) = psi_zstar(zstar(i), u, theta);
   }
   
   arma::vec Jstar(zstar.n_elem);
@@ -342,6 +335,80 @@ List crm_sampler_fractionalY(const int& M, const arma::vec& u, arma::vec zstar,
     Jstar(i) = R::rgamma(nstar(i), 1 / (psi_star(i) + 1));
   }
   
+  return List::create(Named("RL") = RL,
+                      Named("RJ") = RJ,
+                      Named("zstar") = zstar, 
+                      Named("Jstar") = Jstar
+  );
+}
+
+
+// [[Rcpp::export]]
+List crm_sampler_fractionalY(const int& M, const arma::vec& u, arma::vec zstar,
+                             arma::vec nstar, arma::vec RL,
+                             arma::vec RJ, const arma::vec& tht, const double& alpha,
+                             const arma::vec& mu, const arma::vec& y,
+                             const float& shape1, const float& shape2) {
+
+  int n = tht.n_elem;
+  int N = 3001;
+  int R = 3001;
+  double eps = 1e-6;
+  arma::vec s = -arma::log(arma::linspace(exp(-1e-6), exp(-5e-4), N));
+
+  // Sorted, ascending order, needed in RL
+  // arma::vec z = arma::sort(as<arma::vec>(Rcpp::runif(R, 0, 1))); // Centering dist: Uniform(0, 1)
+  // arma::vec z = arma::sort(as<arma::vec>(Rcpp::rbeta(R, shape1, shape2))); // Centering dist: Beta(shape1, shape2)
+  arma::vec z = arma::linspace(eps, 1-eps, R);
+
+  // Compute psi(z; u, tht)
+  arma::vec psi_z(R);
+  for (int i = 0; i < R; ++i) {
+    psi_z(i) = psi(z(i), u, tht);
+  }
+
+  // First Part: random locations and jumps
+  arma::vec fnS(N);
+  for (int i = 0; i < N; ++i) {
+    fnS(i) = arma::mean(arma::exp(-(1 + psi_z) * s(i)) / s(i));
+  }
+
+  arma::vec ds = arma::diff(s);
+  arma::vec h = (fnS.subvec(0, N-2) + fnS.subvec(1, N-1)) / 2;
+  arma::vec Nv = arma::reverse(arma::cumsum(arma::reverse(ds % h)));
+  Nv = arma::join_cols(Nv, arma::zeros(1));
+  Nv *= alpha;
+
+  arma::vec xi = arma::cumsum(as<arma::vec>(Rcpp::rexp(M, 1.0)));
+  // arma::vec RJ(M); // RJ = Random jumps, M = Finite truncation for CRM
+  int iNv = N - 1;
+
+  for (int i = 0; i < M; ++i) {
+    while (iNv > 0 && Nv(iNv) < xi(i)) {
+      --iNv;
+    }
+    RJ(i) = s(iNv + 1);
+  }
+
+  // arma::vec RL(M); // RL = Random locations
+  for (int m = 0; m < M; ++m) {
+    double xi = arma::randu();
+    arma::vec temp = arma::exp(-(1 + psi_z) * RJ(m));
+    double cutoff = arma::accu(temp) * xi;
+    RL(m) = z(arma::as_scalar(arma::find(arma::cumsum(temp) - cutoff > 0, 1, "first")));
+  }
+
+  // Second Part: random jumps [for fixed locations]
+  arma::vec psi_star(zstar.n_elem);
+  for (int i = 0; i < zstar.n_elem; ++i) {
+    psi_star(i) = psi_zstar(zstar(i), u, tht);
+  }
+
+  arma::vec Jstar(zstar.n_elem);
+  for (int i = 0; i < zstar.n_elem; ++i) {
+    Jstar(i) = R::rgamma(nstar(i), 1 / (psi_star(i) + 1)); // shape, scale
+  }
+
   // arma::vec z_tld_temp = arma::join_cols(RL, zstar);
   // if (arma::min(mu) >= arma::min(z_tld_temp) && arma::max(mu) <= arma::max(z_tld_temp)) {
   //   RL = RL;
@@ -349,10 +416,10 @@ List crm_sampler_fractionalY(const int& M, const arma::vec& u, arma::vec zstar,
   //   zstar = zstar;
   //   Jstar = Jstar;
   // }
-  
+
   return List::create(Named("RL") = RL,
                       Named("RJ") = RJ,
-                      Named("zstar") = zstar, 
+                      Named("zstar") = zstar,
                       Named("Jstar") = Jstar
   );
 }
@@ -379,13 +446,13 @@ double log_posterior_u(const arma::vec& u, const arma::vec& z, const arma::vec& 
 }
 
 // // [[Rcpp::export]]
-// arma::vec u_sampler(const arma::vec& u, const arma::vec& z, const arma::vec& theta, 
+// arma::vec u_sampler(const arma::vec& u, const arma::vec& z, const arma::vec& theta,
 //                     const double& alpha, const double& delta){
 //   arma::vec u_star = arma::zeros<arma::vec>(u.size());
 //   double logQ_ratio = 0.0;
 //   for(int i = 0; i < u.size(); ++i){
-//     u_star(i) = R::rgamma(delta, u(i) / delta); // u_proposal := u_star ~ Gamma(shape = delta, scale = u / delta)  
-//     logQ_ratio += logpdf_gamma(u(i), delta, u_star(i) / delta) - 
+//     u_star(i) = R::rgamma(delta, u(i) / delta); // u_proposal := u_star ~ Gamma(shape = delta, scale = u / delta)
+//     logQ_ratio += logpdf_gamma(u(i), delta, u_star(i) / delta) -
 //       logpdf_gamma(u_star(i), delta, u(i) / delta); // log(q(u | u_star)) - log(q(u_star | u))
 //   }
 //   double logratio = log_posterior_u(u_star, z, theta, alpha) -
@@ -398,19 +465,19 @@ double log_posterior_u(const arma::vec& u, const arma::vec& z, const arma::vec& 
 // }
 
 // [[Rcpp::export]]
-arma::vec u_sampler(arma::vec& u, const arma::vec& z, const arma::vec& theta, 
+arma::vec u_sampler(arma::vec& u, const arma::vec& z, const arma::vec& theta,
                     const double& alpha, const double& delta){
-  arma::vec u_star = u;
   for(int i = 0; i < u.size(); ++i){
-    u_star(i) = R::rgamma(delta, u(i) / delta); // u_proposal := u_star ~ Gamma(shape = delta, scale = u / delta)  
-    double logQ_ratio = logpdf_gamma(u(i), delta, u_star(i) / delta) - 
+    arma::vec u_star = u;
+    u_star(i) = R::rgamma(delta, u(i) / delta); // u_proposal := u_star ~ Gamma(shape = delta, scale = u / delta)
+    double logQ_ratio = logpdf_gamma(u(i), delta, u_star(i) / delta) -
       logpdf_gamma(u_star(i), delta, u(i) / delta); // log(q(u | u_star)) - log(q(u_star | u))
     double logratio = log_posterior_u(u_star, z, theta, alpha) -
     log_posterior_u(u, z, theta, alpha) + logQ_ratio;
   if(log(R::runif(0, 1)) < logratio){
-    u = u_star;
+    u(i) = u_star(i);
   } else {
-      u = u;
+      u(i) = u(i);
     }
   }
   return u;
