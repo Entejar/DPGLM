@@ -18,8 +18,8 @@ registerDoParallel(cl)
 # True f0 = KDE on y -----------------------------------------------------------
 f0_true_kde <- readRDS("data/f0_true_kde.rds")
 spt <- f0_true_kde$spt
-f0_kde  <- f0_true_kde$f0
-mu0 <- sum(spt * f0_kde) / sum(f0_kde)
+f0_kde  <- f0_true_kde$f0 / sum(f0_kde)
+mu0 <- sum(spt * f0_kde) 
 
 sim_I <- function(n) {
   X     <- cbind(1, matrix(c(rnorm(n, 1, 0.5), rnorm(n, 2, 1)), ncol = 2))

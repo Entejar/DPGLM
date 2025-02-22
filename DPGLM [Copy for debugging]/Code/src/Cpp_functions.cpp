@@ -240,14 +240,13 @@ double llik_beta_expK(const arma::vec& y, const arma::mat& x, const arma::vec& t
 
 //[[Rcpp::export]]
 double psi(double z, arma::vec u, arma::vec tht) {
-  double mx = 0; // arma::max(tht * z);
+  double mx = arma::max(tht * z);
   return arma::accu(u % arma::exp(tht * z - mx));
 }
 
 //[[Rcpp::export]]
 double psi_zstar(double zstar, arma::vec u, arma::vec tht) {
-  double mx = 0; // arma::max(tht * zstar); 
-  return arma::accu(u % arma::exp(tht * zstar - mx));
+  return arma::accu(u % arma::exp(tht * zstar));
 }
 
 

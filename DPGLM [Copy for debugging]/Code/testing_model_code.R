@@ -329,9 +329,9 @@ for(itr in 1:iter){
 data <- dat[, -2]
 
 fit <- brm(
-  Y ~ X2,                # Formula for mean
-  data = data,              # Data
-  family = Beta(),            # Beta family,
+  bf(Y ~ X2, phi ~ X2),
+  data = data,             
+  family = Beta(),           
   chains = 1, iter = 2000, warmup = 1000
 )
 fit

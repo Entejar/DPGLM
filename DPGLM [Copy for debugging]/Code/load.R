@@ -4,6 +4,7 @@ library(gldrm)
 library(mvtnorm)
 library(Rcpp)
 library(RcppArmadillo)
+library(brms)
 
 Rcpp::sourceCpp("src/Cpp_functions.cpp")
 Rcpp::sourceCpp("src/theta.cpp")
