@@ -3,6 +3,7 @@ rm(list = ls())
 require(foreach)
 require(doParallel)
 source("load.R")
+source("additional_functions.R")
 library(splines)
 source("src/fit_func_smi_sw.R")
 source("src/fit_func_smi_mw1.R")
@@ -33,6 +34,8 @@ X <- X %>% as.matrix()
 y <- y %>% as.numeric()
 
 data_mw <- data.frame(y, X)
+
+group_index <- rep(1:101, each = 5)
 
 Xstar <- ns(
   hustadTDSW$age_months,
@@ -83,7 +86,7 @@ out_ <- foreach(
       gldrm_fit <- gldrm(y ~ X[, -1], link = link)
       mu_beta <- gldrm_fit$beta
       sigma_beta <- gldrm_fit$seBeta
-      out <- fit_func_smi_mw2(y, X, iter, c0, mu_beta, sigma_beta) 
+      out <- fit_func_smi_mw2(y, X, iter, c0, mu_beta, sigma_beta, group_index, rho) 
     }
     
     if(set == 3){

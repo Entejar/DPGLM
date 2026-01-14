@@ -93,14 +93,14 @@ resample_zstar <- function(z){
   return(list(zstar = zstar, nstar = nstar))
 }
 
-logpost_beta <- function(beta, z, X, atoms, jumps, mu_beta, sigma_beta){
+logpost_beta <- function(beta, z, X, atoms, jumps, mu_beta, sigma_beta, h){
   n <- length(z)
   #mu <- exp(X %*% beta) / (1 + exp(X %*% beta))
   mu <- plogis(X %*% beta)
   theta <- gldrm:::getTheta(spt = atoms, f0 = jumps, mu = mu, 
                             ySptIndex = NULL, sampprobs = NULL)$theta
   btheta <- b_theta(theta, atoms, jumps)
-  log_post <- sum(theta * z - btheta) - sum((beta - mu_beta)^2 / (2 * sigma_beta^2)) # others const in beta
+  log_post <- sum(theta * z + h - btheta) - sum((beta - mu_beta)^2 / (2 * sigma_beta^2)) # others const in beta
   return(log_post)
 }
 
@@ -123,7 +123,7 @@ loglik <- function(z, X, beta, atoms, jumps){
 
 
 
-log_post_u <- function(u, zstar, nstar, theta, alpha, min_y, max_y) {
+log_post_u <- function(u, zstar, nstar, theta, alpha, min_y, max_y, h) {
   # Number of grid points for the continuous part
   R <- 250
   eps <- 1e-6
@@ -137,7 +137,7 @@ log_post_u <- function(u, zstar, nstar, theta, alpha, min_y, max_y) {
   # For each grid point v in z_grid, compute in a stabilized manner:
   #    log(1 + sum_i u_i * exp(theta_i * v))
   cont_vals <- sapply(z_grid, function(v) {
-    A <- log(u) + theta * v
+    A <- log(u) + theta * v + h
     max_A <- max(A)
     S <- exp(max_A) * sum(exp(A - max_A))
     log1p(S)  # log(1+S) computed in a numerically stable way
@@ -150,7 +150,7 @@ log_post_u <- function(u, zstar, nstar, theta, alpha, min_y, max_y) {
   # For each unique atom in zstar, with multiplicity given by nstar,
   # compute: nstar * log(1 + sum_i u_i * exp(theta_i * zstar))
   disc_vals <- sapply(zstar, function(v) {
-    A <- log(u) + theta * v
+    A <- log(u) + theta * v + h
     max_A <- max(A)
     S <- exp(max_A) * sum(exp(A - max_A))
     log1p(S)
@@ -164,7 +164,7 @@ log_post_u <- function(u, zstar, nstar, theta, alpha, min_y, max_y) {
   return(-neg_log_post)
 }
 
-sampler_u <- function(u, zstar, nstar, theta, alpha, delta, min_y, max_y) {
+sampler_u <- function(u, zstar, nstar, theta, alpha, delta, min_y, max_y, h) {
   n <- length(u) # Get the length of u
   
   for (i in seq_len(n)) {
@@ -177,8 +177,8 @@ sampler_u <- function(u, zstar, nstar, theta, alpha, delta, min_y, max_y) {
       dgamma(u_star[i], shape = delta, scale = u[i] / delta, log = TRUE)
     
     # Compute logratio
-    logratio <- log_post_u(u_star, zstar, nstar, theta, alpha, min_y, max_y) - 
-      log_post_u(u, zstar, nstar, theta, alpha, min_y, max_y) + logQ_ratio
+    logratio <- log_post_u(u_star, zstar, nstar, theta, alpha, min_y, max_y, h) - 
+      log_post_u(u, zstar, nstar, theta, alpha, min_y, max_y, h) + logQ_ratio
     
     # Metropolis-Hastings acceptance step
     if (log(runif(1)) < logratio) {

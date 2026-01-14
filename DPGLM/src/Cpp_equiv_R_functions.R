@@ -142,7 +142,7 @@ crm_sampler2 <- function(M, u, zstar, nstar, RL, RJ, tht, alpha) {
   ))
 }
 
-crm_sampler <- function(M, u, zstar, nstar, tht, alpha, min_y, max_y){
+crm_sampler <- function(M, u, zstar, nstar, tht, alpha, min_y, max_y, h){
   N <- 3001
   R <- 3001
   eps <- 1e-6

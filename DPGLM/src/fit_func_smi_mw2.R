@@ -1,4 +1,4 @@
-fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta) {
+fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, rho) {
   m0 <- mean(y)
   min_y <- 0
   max_y <- 1
@@ -76,12 +76,28 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta) {
     mean_z_ <- plogis(X %*% beta_)
     if (min(mean_z_) >= min(z.tld) && max(mean_z_) <= max(z.tld)) {
       # Compute log-posterior values
+      
+      h = copula_contribution_by_group(y, group_index, rho,
+                                       crm.atoms = z.tld, crm.jumps = J.tld, theta, c0,
+                                       min_y, max_y)
       cr_logpost_beta <- logpost_beta(beta = beta, z = z, X = X, atoms = z.tld,
                                       jumps  = J.tld, mu_beta = mu_beta,
-                                      sigma_beta = sigma_beta)
+                                      sigma_beta = sigma_beta, h = h)
+      
+      theta_ <- gldrm:::getTheta(
+        spt = z.tld,
+        f0  = J.tld,
+        mu  = plogis(X %*% beta_),
+        sampprobs  = NULL,
+        ySptIndex  = NULL,
+        thetaStart = theta
+      )$theta
+      h_ = copula_contribution_by_group(y, group_index, rho,
+                                        crm.atoms = z.tld, crm.jumps = J.tld, theta_, c0,
+                                        min_y, max_y)
       pr_logpost_beta <- logpost_beta(beta = beta_, z = z, X = X, atoms = z.tld,
                                       jumps  = J.tld, mu_beta = mu_beta,
-                                      sigma_beta = sigma_beta)
+                                      sigma_beta = sigma_beta, h = h_)
       log_acc_prob <- pr_logpost_beta - cr_logpost_beta
       if (log(runif(1)) < log_acc_prob) {
         beta <- beta_
@@ -106,15 +122,20 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta) {
     
     theta <- theta_tilde
     
+    # h update ------------------------------------
+    h = copula_contribution_by_group(y, group_index, rho,
+                                     crm.atoms = z.tld, crm.jumps = J.tld, theta, c0,
+                                     min_y, max_y)
+    
     # u update ----------------------------------------
     # u <- sampler_u(u, z, theta, alpha, delta)
     # 
     # u_ <- u
-    u <- sampler_u(u, zstar, nstar, theta, alpha, delta, min_y, max_y)
+    u <- sampler_u(u, zstar, nstar, theta, alpha, delta, min_y, max_y, h)
     #plot(u, u_, type = 'p')
     
     # CRM update --------------------------------------
-    crm_star <- crm_sampler(M, u, zstar, nstar, theta, alpha, min_y, max_y)
+    crm_star <- crm_sampler(M, u, zstar, nstar, theta, alpha, min_y, max_y, h)
     z.tld_star <- c(crm_star$RL, crm_star$zstar)
     J.tld_star <- c(crm_star$RJ, crm_star$Jstar)
     
@@ -129,11 +150,15 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta) {
         thetaStart = theta
       )$theta
       
+      h_star = copula_contribution_by_group(y, group_index, rho,
+                                            crm.atoms = z.tld_star, crm.jumps = J.tld_star, theta = theta_tilde_star, c0,
+                                            min_y, max_y)
+      
       b1 <- b_theta(theta_tilde_star, z.tld_star, J.tld_star)
       b2 <- b_theta(theta_tilde, z.tld, J.tld)
       b3 <- b_theta(theta_tilde_star, z.tld, J.tld)
       b4 <- b_theta(theta_tilde, z.tld_star, J.tld_star)
-      log_r <- log(exp(sum(2*(theta_tilde_star - theta_tilde)*z - b1 + b2 - b3 + b4)))
+      log_r <- log(exp(sum(2*(theta_tilde_star - theta_tilde)*z + h_star - h - b1 + b2 - b3 + b4)))
       
       if(log(runif(1)) < log_r){
         count2 <- count2 + 1
