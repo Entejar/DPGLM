@@ -1,4 +1,4 @@
-fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, rho) {
+fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index) {
   m0 <- mean(y)
   min_y <- 0
   max_y <- 1
@@ -26,6 +26,8 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, r
   gldrm_fit <- gldrm(y ~ X[, -1], link = link)
   beta_samples[1, ] <- beta <- gldrm_fit$beta %>% as.numeric()
   beta_cov <- gldrm_fit$varbeta
+  rho_samples <- numeric(iter)
+  rho <- 0.8
   
   meanY_x <- plogis(X %*% beta)
   z.tld <- z_tld <-  gldrm_fit$spt %>% as.numeric() 
@@ -77,7 +79,7 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, r
     if (min(mean_z_) >= min(z.tld) && max(mean_z_) <= max(z.tld)) {
       # Compute log-posterior values
       
-      h = copula_contribution_by_group(y, group_index, rho,
+      h = log_copula_contribution_by_obs(y, group_index, rho,
                                        crm.atoms = z.tld, crm.jumps = J.tld, theta, c0,
                                        min_y, max_y)
       cr_logpost_beta <- logpost_beta(beta = beta, z = z, X = X, atoms = z.tld,
@@ -92,7 +94,7 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, r
         ySptIndex  = NULL,
         thetaStart = theta
       )$theta
-      h_ = copula_contribution_by_group(y, group_index, rho,
+      h_ = log_copula_contribution_by_obs(y, group_index, rho,
                                         crm.atoms = z.tld, crm.jumps = J.tld, theta_, c0,
                                         min_y, max_y)
       pr_logpost_beta <- logpost_beta(beta = beta_, z = z, X = X, atoms = z.tld,
@@ -123,7 +125,7 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, r
     theta <- theta_tilde
     
     # h update ------------------------------------
-    h = copula_contribution_by_group(y, group_index, rho,
+    h = log_copula_contribution_by_obs(y, group_index, rho,
                                      crm.atoms = z.tld, crm.jumps = J.tld, theta, c0,
                                      min_y, max_y)
     
@@ -150,7 +152,7 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, r
         thetaStart = theta
       )$theta
       
-      h_star = copula_contribution_by_group(y, group_index, rho,
+      h_star = log_copula_contribution_by_obs(y, group_index, rho,
                                             crm.atoms = z.tld_star, crm.jumps = J.tld_star, theta = theta_tilde_star, c0,
                                             min_y, max_y)
       
@@ -192,6 +194,25 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, r
       thetaStart = NULL
     )$theta
     
+    # rho update ----------------------------------------------------------------
+    # we also need to choose the proposal sd for rho
+    rho_proposal_sd = 0.1
+    rho_prop <- plogis(qlogis(rho) + rnorm(1, 0, rho_proposal_sd))
+    # log posterior
+    logpost_current <- log_post_rho(rho, h)
+    h_ = log_copula_contribution_by_obs(y, group_index, rho_prop,
+                                          crm.atoms = z.tld, crm.jumps = J.tld, theta, c0,
+                                          min_y, max_y)
+    logpost_prop <- log_post_rho(rho_prop, h_)
+    
+    # Jacobian correction
+    log_jacobian <- log(rho_prop * (1 - rho_prop)) - log(rho * (1 - rho))
+    log_r <- logpost_prop - logpost_current + log_jacobian
+    
+    if (log(runif(1)) < log_r) {
+      rho = rho_prop
+    } 
+    
     #Jtld_0 <- exp(theta0 * z.tld) * J.tld / sum(exp(theta0 * z.tld) * J.tld)
     temp <- exp(theta0 * z.tld - max(theta0 * z.tld))
     Jtld_0 <- (temp * J.tld) / sum(temp * J.tld)
@@ -203,6 +224,7 @@ fit_func_smi_mw2 <- function(y, X, iter, c0, mu_beta, sigma_beta, group_index, r
     beta_samples[itr,] <- beta
     theta_samples[itr, ] <- theta
     crm_samples[[itr]] <- list(z.tld = z.tld, J.tld = J.tld)
+    rho_samples[itr] <- rho
     lnlik_samples[itr] <- lnlik
   }
   

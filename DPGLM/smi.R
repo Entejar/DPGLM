@@ -35,6 +35,8 @@ y <- y %>% as.numeric()
 
 data_mw <- data.frame(y, X)
 
+# Need users to enter
+# group_index identifies group membership for each observation.
 group_index <- rep(1:101, each = 5)
 
 Xstar <- ns(
@@ -86,7 +88,7 @@ out_ <- foreach(
       gldrm_fit <- gldrm(y ~ X[, -1], link = link)
       mu_beta <- gldrm_fit$beta
       sigma_beta <- gldrm_fit$seBeta
-      out <- fit_func_smi_mw2(y, X, iter, c0, mu_beta, sigma_beta, group_index, rho) 
+      out <- fit_func_smi_mw2(y, X, iter, c0, mu_beta, sigma_beta, group_index) 
     }
     
     if(set == 3){
