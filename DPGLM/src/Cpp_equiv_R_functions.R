@@ -142,11 +142,13 @@ crm_sampler2 <- function(M, u, zstar, nstar, RL, RJ, tht, alpha) {
   ))
 }
 
-crm_sampler <- function(M, u, zstar, nstar, tht, alpha, min_y, max_y){
+crm_sampler <- function(M, u, zstar, nstar, tht_, sd_, alpha, min_y, max_y){
   N <- 3001
   R <- 3001
   eps <- 1e-6
   s <- -log(seq(exp(-eps), exp(-5e-4), length.out = N))
+  
+  tht <- rnorm(1, mean = tht_, sd = sd_)
   
   # Sorted, ascending order, needed in RL
   #z <- seq(eps, 1 - eps, length.out = R)
@@ -256,6 +258,7 @@ crm_sampler <- function(M, u, zstar, nstar, tht, alpha, min_y, max_y){
     RL = RL,
     RJ = RJ,
     zstar = zstar,
-    Jstar = Jstar
+    Jstar = Jstar,
+    theta_tilde = tht
   ))
 }

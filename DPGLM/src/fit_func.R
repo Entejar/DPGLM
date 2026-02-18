@@ -146,7 +146,7 @@ fit_func <- function(dat, iter, truth, mu_beta, sigma_beta, scale_factors, m0) {
     
     
     # theta update ------------------------------------
-    theta_tilde <- gldrm:::getTheta(
+    theta <- gldrm:::getTheta(
       spt = z.tld,
       f0  = J.tld,
       mu  = meanY_x,
@@ -155,19 +155,25 @@ fit_func <- function(dat, iter, truth, mu_beta, sigma_beta, scale_factors, m0) {
       thetaStart = theta
     )$theta
     
-    theta <- theta_tilde
-    
     # u update ----------------------------------------
     u <- sampler_u(u, zstar, nstar, theta, alpha, delta, min_y, max_y)
     
+    sd_theta <- rep(1, n) # Initial proposal standard deviation for theta_tilde
+    
     # CRM update --------------------------------------
-    crm_star <- crm_sampler(M, u, zstar, nstar, theta, alpha, min_y, max_y)
+    burn_in <- min(200, floor(iter / 2))
+    if(itr >  burn_in){
+      sd_theta <- apply(theta_samples[2:burn_in, ], 2, sd)        #sd could be replaced by sd(diff)
+    }
+    
+    crm_star <- crm_sampler(M, u, zstar, nstar, theta, sd_theta, alpha, min_y, max_y)
     z.tld_star <- c(crm_star$RL, crm_star$zstar)
     J.tld_star <- c(crm_star$RJ, crm_star$Jstar)
+    theta_tilde <- crm_star$theta_tilde
     
     if(min(meanY_x) >= min(z.tld_star) && max(meanY_x) <= max(z.tld_star)){
       # MH step
-      theta_tilde_star <- gldrm:::getTheta(
+      theta_star <- gldrm:::getTheta(
         spt = z.tld_star,
         f0  = J.tld_star,
         mu  = meanY_x,
@@ -176,11 +182,12 @@ fit_func <- function(dat, iter, truth, mu_beta, sigma_beta, scale_factors, m0) {
         thetaStart = theta
       )$theta
       
-      b1 <- b_theta(theta_tilde_star, z.tld_star, J.tld_star)
-      b2 <- b_theta(theta_tilde, z.tld, J.tld)
-      b3 <- b_theta(theta_tilde_star, z.tld, J.tld)
+      b1 <- b_theta(theta_star, z.tld_star, J.tld_star)
+      b2 <- b_theta(theta, z.tld, J.tld)
+      b3 <- b_theta(theta_tilde, z.tld, J.tld)
       b4 <- b_theta(theta_tilde, z.tld_star, J.tld_star)
-      log_r <- log(exp(sum(2*(theta_tilde_star - theta_tilde)*z - b1 + b2 - b3 + b4)))
+      log_r <- sum((theta_star - theta)*z - b1 + b2 - b3 + b4) + sum(dnorm(theta_tilde, mean = theta_star, sd = sd_theta, log = TRUE) - 
+                                                                      dnorm(theta_tilde, mean = theta, sd = sd_theta, log = TRUE))
       
       if(log(runif(1)) < log_r){
         count2 <- count2 + 1
@@ -190,7 +197,7 @@ fit_func <- function(dat, iter, truth, mu_beta, sigma_beta, scale_factors, m0) {
         Jstar <- crm_star$Jstar
         z.tld <- c(RL, zstar)
         J.tld <- c(RJ, Jstar)
-        theta <- theta_tilde_star
+        theta <- theta_star
       }
     }
     
@@ -226,6 +233,7 @@ fit_func <- function(dat, iter, truth, mu_beta, sigma_beta, scale_factors, m0) {
   }
   
   dpglm_fit <- list(z = z_samples, beta = beta_samples, 
+                    theta = theta_samples,
                     crm = crm_samples, 
                     beta_acceptance = count1 / iter,
                     crm_acceptance = count2 / iter)

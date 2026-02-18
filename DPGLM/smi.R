@@ -51,7 +51,7 @@ data_sw <- data.frame(y, X)
 
 out_ <- list()
 n_settings <- 8
-iter <- 3000
+iter <- 1000
 
 start_time <- Sys.time()
 
@@ -180,4 +180,30 @@ stopCluster(cl)
 # Compute Execution Time
 time_tot <- Sys.time() - start_time
 print(time_tot)
+
+dat <- data_sw
+y <- dat[, 1]
+X <- dat[, -1]
+X <- X %>% as.matrix()
+y <- y %>% as.numeric()
+c0 <- c0_silverman(y) / 4 
+gldrm_fit <- gldrm(y ~ X[, -1], link = link)
+mu_beta <- gldrm_fit$beta
+sigma_beta <- gldrm_fit$seBeta
+out_sw <- fit_func_smi_sw(y, X, iter, c0, mu_beta, sigma_beta) 
+
+beta_trace <- data.frame(
+  iteration = 1:iter,
+  beta1 = out_sw$dpglm$beta[, 3],
+  beta2 = out_sw$dpglm$beta[, 4]
+)
+
+library(ggplot2)
+
+ggplot(beta_trace, aes(x = iteration)) +
+  geom_line(aes(y = beta1, color = "beta1")) +
+  geom_line(aes(y = beta2, color = "beta2")) +
+  labs(title = "Trace Plot for Beta Coefficients", y = "Beta Value") +
+  theme_minimal() +
+  scale_color_manual(values = c("blue", "red"), name = "Coefficients")
 

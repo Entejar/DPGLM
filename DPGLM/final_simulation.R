@@ -122,3 +122,24 @@ stopCluster(cl)
 time_tot <- Sys.time() - start_time
 print(time_tot)
 
+
+
+# Stuff----
+
+# trace plots for beta
+out <- out2$fit3
+beta_trace <- data.frame(
+  iteration = 1:iter,
+  beta1 = out$dpglm$beta[, 1],
+  beta2 = out$dpglm$beta[, 2]
+)
+library(ggplot2)
+ggplot(beta_trace, aes(x = iteration)) +
+  geom_line(aes(y = beta1, color = "beta1")) +
+  geom_line(aes(y = beta2, color = "beta2")) +
+  labs(title = "Trace Plot for Beta Coefficients", y = "Beta Value") +
+  theme_minimal() +
+  scale_color_manual(values = c("blue", "red"), name = "Coefficients")
+
+out$dpglm$beta_acceptance
+out$dpglm$crm_acceptance
